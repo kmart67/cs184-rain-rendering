@@ -89,10 +89,104 @@
 				</p>
 
 				<h2>Schedule</h2>
-				<p>[Insert schedule]</p>
+				<p>
+					Week 1:
+					<ol>
+					  <li>Look into using a GPU, Open GL, and other frameworks.</li>
+					  <li>Start implementing <a href="http://www.unilim.fr/pages_perso/guillaume.gilet/publications/pdf/CG2015.pdf">rainfall model</a> for 2D context (to get familiar with outlined approach in paper).</li>
+					  <li>Brainstorm particle intersection algorithm for interaction between raindrops and objects in scene.</li>
+					</ol>
+					<br>
+				</p>
+
+				<p>
+					Week 2:
+					<ol>
+						<li>Extend rainfall model to 3D scene (empty).
+							<ul>
+								<li>Modifiable properties of rainfall:
+									<ul>
+										<li>Velocity</li>
+										<li>Size of raindrops</li>
+										<li>Density (number of raindrops in any given area).</li>
+									</ul>
+								</li>
+								<li>Verify that modifications alter results.</li>
+								<li>Check refraction of light through raindrops.</li>
+							</ul>
+						</li>
+						<li>Implement raindrop-object intersection algorithm.</li>
+						<li>Brainstorm particle intersection algorithm for interaction between raindrops and objects in scene.</li>
+					</ol>
+					<br>
+				</p>
+
+				<p>Week 3:
+					<ol>
+						<li>Bug fixes with raindrop-object intersection algorithm.</li>
+						<li>Create GUI for real-time rendering.</li>
+						<li>Start implementing <a href="http://mmacklin.com/pbf_sig_preprint.pdf">puddling effects</a> in closed 3D scene</li>
+					</ol>
+					<br>
+				</p>
+
+				<p>Week 4:
+					<ol>
+						<li>Debugging</li>
+						<li>Look into additional <a href="https://graphics.stanford.edu/papers/water-sg02/water.pdf">photo realistic effects</a> for puddling</li>
+						<li>Work on final presentation and website</li>
+					</ol>
+				</p>
 
 				<h2>Resources</h2>
-				<p>[Insert resources]</p>
+				<ol>
+					<li>Position Based Fluids
+						<ul>
+							<li>Link: <a href="http://mmacklin.com/pbf_sig_preprint.pdf">http://mmacklin.com/pbf_sig_preprint.pdf</a></li>
+							<li>Notes: Discusses interactive environments and particle clustering</li>
+						</ul>
+					</li>
+					<li>Realistic Simulation for Rainy Scene
+						<ul>
+							<li>Link: <a href="https://pdfs.semanticscholar.org/9491/c6ec6612267ccb411739674e199ca1963d4a.pdf">https://pdfs.semanticscholar.org/9491/c6ec6612267ccb411739674e199ca1963d4a.pdf</a></li>
+							<li>Notes: Discusses raindrop dynamics</li>
+						</ul>
+					</li>
+					<li>Animation and Rendering of Complex Water Surfaces
+						<ul>
+							<li>Link: <a href=" https://graphics.stanford.edu/papers/water-sg02/water.pdf"> https://graphics.stanford.edu/papers/water-sg02/water.pdf</a></li>
+							<li>Notes: Particle-level methods and surface velocity</li>
+						</ul>
+					</li>
+					<li>A multi-scale model for rain rendering in real time
+						<ul>
+							<li>Link: <a href="http://www.unilim.fr/pages_perso/guillaume.gilet/publications/pdf/CG2015.pdf">http://www.unilim.fr/pages_perso/guillaume.gilet/publications/pdf/CG2015.pdf</a></li>
+							<li>Notes: Simulate rain streaks</li>
+						</ul>
+					</li>
+					<li>Photorealistic Rendering of Rain Streaks
+						<ul>
+							<li>Link: <a href="http://www1.cs.columbia.edu/CAVE/publications/pdfs/Garg_TOG06.pdf ">http://www1.cs.columbia.edu/CAVE/publications/pdfs/Garg_TOG06.pdf </a></li>
+							<li>Notes: Illumination of rain streaks based on lighting and other properties of environment</li>
+						</ul>
+					</li>
+				</ol>
+
+				<p>The goal of our project is to extend existing rainfall algorithms to a 3D context,
+					to examine the interaction of rain droplets with objects in open and closed scenes.
+					The above papers all outline various approaches to rendering rain streaks and implementing
+					photorealistic water effects through particle systems; we hope to build off of these approaches for our photorealistic rainfall effects.
+					<br><br>
+					We expect that we’ll need to use a GPU and Open GL to implement all relevant
+					models and algorithms for the project. However, no one on our team has access to a GPU.
+					<span class="sp-2">Question for reviewer:</span> Do you think it will be feasible to implement real-time rendering
+					without a GPU? Do you have suggestions on cloud GPU services we could use (Google Cloud
+					seems to offer $300 credit for a free trial, but we are not familiar with other cloud services)?
+					<br><br>
+					Should we be unable to utilize a GPU for this project, we will likely focus on
+					photorealistic rainfall effects in a 2D scene. We will follow-up with the course staff
+					in this case, to discuss the modified project proposal.
+				</p>
 				<br><br><br><br>
 
 	</div>
