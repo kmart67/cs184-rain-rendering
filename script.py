@@ -11,20 +11,35 @@ def initscene():
     #right wall
     addplane(location=(1,0,0.75), rotation=(math.radians(90), 0, math.radians(90)))
     bpy.context.object.scale[1] = 0.75
+    mat = bpy.data.materials.new('RightWallMaterial')
+    bpy.context.active_object.data.materials.append(mat)
+    bpy.context.object.active_material.diffuse_color = (0, 1, 0)
     
     #left wall
     addplane(location=(-1,0,0.75), rotation=(math.radians(90), 0, math.radians(90)))
     bpy.context.object.scale[1] = 0.75
+    mat = bpy.data.materials.new('LeftWallMaterial')
+    bpy.context.active_object.data.materials.append(mat)
+    bpy.context.object.active_material.diffuse_color = (1, 0, 0)
     
     #ceiling wall
     addplane(location=(0,0,1.5))
+    mat = bpy.data.materials.new('CeilingMaterial')
+    bpy.context.active_object.data.materials.append(mat)
+    bpy.context.object.active_material.diffuse_color = (1, 1, 1)
     
     #floor
     addplane(location=(0,0,0))
+    mat = bpy.data.materials.new('FloorMaterial')
+    bpy.context.active_object.data.materials.append(mat)
+    bpy.context.object.active_material.diffuse_color = (1, 1, 1)
     
     #backwall
     addplane(location=(0,-1,0.75), rotation=(math.radians(90), 0, 0))
     bpy.context.object.scale[1] = 0.75
+    mat = bpy.data.materials.new('BackWallMaterial')
+    bpy.context.active_object.data.materials.append(mat)
+    bpy.context.object.active_material.diffuse_color = (1, 1, 1)
     
     #joining together the walls
     for ob in bpy.context.scene.objects:
@@ -39,7 +54,7 @@ def initscene():
     bpy.data.meshes["Plane"].name = "wall"
     
     #adding lightsource
-    addplane(location=(0,0,1.5))
+    addplane(location=(0,0,1.49))
     bpy.ops.transform.resize(value=(0.45, 0.35, 1))
     bpy.ops.object.lamp_add(type='AREA', location=(0,0,1.5))
     
