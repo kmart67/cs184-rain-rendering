@@ -2,7 +2,7 @@
 <html>
 <head>
 
-	<title>Rain Renderer</title>
+	<title>Water-Drop Simulation</title>
 
 	<link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,500" rel="stylesheet">
 	<link rel="stylesheet" href="css/main.css">
@@ -10,188 +10,55 @@
 	<body>
 	<div>
 			<h1>CS 184: Computer Graphics and Imaging, Spring 2019<br>
-			<span class="sp-1">Photo-realistic Rain Rendering in Closed 3D Scenes</span></h1>
+			<span class="sp-1">Real-time Water-Drop Simulation</span></h1>
 			<h3>By Varsha Venkat, Jessica Yeh, and Karina Martinez</h3>
 
-			<img src="picture2.png" class="center">
-			<p class="middle"><i><a href="http://www.unilim.fr/pages_perso/guillaume.gilet/publications/pdf/CG2015.pdf?fbclid=IwAR3qM1ZkLCVYtT6eR0cY5lODuvT66iErZ-yHPOuRZQvhduA-5mtlz76dTog">Source:</a> A multiscale model for rain rendering in real-time</i></p>
-
-
-				<h2>Summary</h2>
-				<p>The goal of this project is to implement photo-realistic rain effects
-					in a 3D scene by focusing on creating streaking effect based on velocity
-					of rainfall, interaction of water with surfaces based on affinity to water,
-					and reflection/refraction of light through the rain fall.</p>
-
-				<h2>The Team</h2>
-
-				<div class="row">
-
-					<div class="column-left">
-						<p>Varsha Venkat <br> (26090047)</p>
-					</div>
-
-					<div class="column-center">
-						<p> Jessica Yeh <br> (3031816007) </p>
-					</div>
-
-					<div class="column-right">
-						<p> Karina Martinez <br> (3031813591) </p>
-					</div>
-
-				</div>
-
-				<h2>Problem Description</h2>
-				<p>The wide use of nature scene simulations has led to an increasing
-					study in real-time rendering of virtual environments. In particular,
-					rain simulation plays a vital role in virtual environments amongst
-					defense and military, television, weather forecasts, advertising, video
-					games, and many other fields however, its implementation often leads to
-					a trade-off between how photorealistic it appears and how computationally
-					fast it is rendered. This due to the complex atmospheric physical
-					phenomenons of rain that cause numerous effects including but not limited
-					to the different levels of rainfall that occur, puddles forming, the
-					splashing of raindrops, raindrops streaming off surfaces of objects,
-					light reflection, and light refraction. Hence, simulating the large
-					amount of raindrops in a scene that follow these properties amounts to large
-					computational calculations that may not be efficient and resourceful.
-					<br><br>
-					In this project, we aim to find this balance of implementing photorealistic
-					rain rendering and being able to do so in an efficient amount of time.
-					Our focus in this project will be on creating streaking effect of rainfall,
-					simulating the interaction of water with surfaces
-					based on affinity to water, and reflecting/refracting light through the
-					rain fall particles to ensure we have a photorealistic rendering all while
-					taking advantage of computing platform, hardware and software resources
-					that will allow us to be computationally efficient when rendering these
-					closed 3D scenes.
-				</p>
-
-				<h2>Goals and Deliverables</h2>
-				<p>In this project, our goal is to render photorealistic animations of
-					rainfall in various scenes. Our <span class="sp-2">baseline goal</span> is to implement is a
-					realistic rendering of rainfall in a scene with objects. Our scene will
-					be a cornell box with a light source and spheres inside it. This will
-					show how rain interacts with objects that it hits based on affinity to the
-					material, for example, how droplets drip down the side of objects. Our
-					rendering will also display how water droplets and rain streaks interact with
-					light in terms of reflection and refraction. This animation would probably be a video loop.
-					<br><br>
-					What we hope to deliver as a <span class="sp-2">stretch goal</span> is a real-time interactive
-					system where the user can adjust the density and velocity of rainfall by
-					pressing keys, for example, from sprinkling to a storm. We also hope to render
-					puddles, so as water accumulates in areas at the bottom of the scene, puddles
-					form, and raindrops continue to interact with the puddles when they hit them.
-					This would require changing the cornell box to have an additional side so the water
-					doesn’t fall out of the scene. If implementing puddles, this video would change over
-					time as the puddles grow, and not just work as an infinite loop, which makes it more challenging.
-					<br><br>
-					We will measure the accuracy of the rendering in a qualitative way, by comparing our
-					animations to videos of rainfall. We will be able to quantitatively measure the speed,
-					and from this we can see how various implementations of rain affect speedup.
-				</p>
-
-				<h2>Schedule</h2>
-				<p>
-					Week 1:
-					<ol>
-					  <li>Look into using a GPU, Open GL, and other frameworks.</li>
-					  <li>Start implementing <a href="http://www.unilim.fr/pages_perso/guillaume.gilet/publications/pdf/CG2015.pdf">rainfall model</a> for 2D context (to get familiar with outlined approach in paper).</li>
-					  <li>Brainstorm particle intersection algorithm for interaction between raindrops and objects in scene.</li>
-					</ol>
-					<br>
-				</p>
-
-				<p>
-					Week 2:
-					<ol>
-						<li>Extend rainfall model to 3D scene (empty).
-							<ul>
-								<li>Modifiable properties of rainfall:
-									<ul>
-										<li>Velocity</li>
-										<li>Size of raindrops</li>
-										<li>Density (number of raindrops in any given area).</li>
-									</ul>
-								</li>
-								<li>Verify that modifications alter results.</li>
-								<li>Check refraction of light through raindrops.</li>
-							</ul>
-						</li>
-						<li>Implement raindrop-object intersection algorithm.</li>
-						<li>Brainstorm particle intersection algorithm for interaction between raindrops and objects in scene.</li>
-					</ol>
-					<br>
-				</p>
-
-				<p>Week 3:
-					<ol>
-						<li>Bug fixes with raindrop-object intersection algorithm.</li>
-						<li>Create GUI for real-time rendering.</li>
-						<li>Start implementing <a href="http://mmacklin.com/pbf_sig_preprint.pdf">puddling effects</a> in closed 3D scene</li>
-					</ol>
-					<br>
-				</p>
-
-				<p>Week 4:
-					<ol>
-						<li>Debugging</li>
-						<li>Look into additional <a href="https://graphics.stanford.edu/papers/water-sg02/water.pdf">photo realistic effects</a> for puddling</li>
-						<li>Work on final presentation and website</li>
-					</ol>
-				</p>
-
-				<h2>Resources</h2>
-				<ol>
-					<li>Position Based Fluids
-						<ul>
-							<li>Link: <a href="http://mmacklin.com/pbf_sig_preprint.pdf">http://mmacklin.com/pbf_sig_preprint.pdf</a></li>
-							<li>Notes: Discusses interactive environments and particle clustering</li>
-						</ul>
-					</li>
-					<li>Realistic Simulation for Rainy Scene
-						<ul>
-							<li>Link: <a href="https://pdfs.semanticscholar.org/9491/c6ec6612267ccb411739674e199ca1963d4a.pdf">https://pdfs.semanticscholar.org/9491/c6ec6612267ccb411739674e199ca1963d4a.pdf</a></li>
-							<li>Notes: Discusses raindrop dynamics</li>
-						</ul>
-					</li>
-					<li>Animation and Rendering of Complex Water Surfaces
-						<ul>
-							<li>Link: <a href=" https://graphics.stanford.edu/papers/water-sg02/water.pdf"> https://graphics.stanford.edu/papers/water-sg02/water.pdf</a></li>
-							<li>Notes: Particle-level methods and surface velocity</li>
-						</ul>
-					</li>
-					<li>A multi-scale model for rain rendering in real time
-						<ul>
-							<li>Link: <a href="http://www.unilim.fr/pages_perso/guillaume.gilet/publications/pdf/CG2015.pdf">http://www.unilim.fr/pages_perso/guillaume.gilet/publications/pdf/CG2015.pdf</a></li>
-							<li>Notes: Simulate rain streaks</li>
-						</ul>
-					</li>
-					<li>Photorealistic Rendering of Rain Streaks
-						<ul>
-							<li>Link: <a href="http://www1.cs.columbia.edu/CAVE/publications/pdfs/Garg_TOG06.pdf ">http://www1.cs.columbia.edu/CAVE/publications/pdfs/Garg_TOG06.pdf </a></li>
-							<li>Notes: Illumination of rain streaks based on lighting and other properties of environment</li>
-						</ul>
-					</li>
-				</ol>
-
-				<p>The goal of our project is to extend existing rainfall algorithms to a 3D context,
-					to examine the interaction of rain droplets with objects in open and closed scenes.
-					The above papers all outline various approaches to rendering rain streaks and implementing
-					photorealistic water effects through particle systems; we hope to build off of these approaches for our photorealistic rainfall effects.
-					<br><br>
-					We expect that we’ll need to use a GPU and Open GL to implement all relevant
-					models and algorithms for the project. However, no one on our team has access to a GPU.
-					<span class="sp-2">Question for reviewer:</span> Do you think it will be feasible to implement real-time rendering
-					without a GPU? Do you have suggestions on cloud GPU services we could use (Google Cloud
-					seems to offer $300 credit for a free trial, but we are not familiar with other cloud services)?
-					<br><br>
-					Should we be unable to utilize a GPU for this project, we will likely focus on
-					photorealistic rainfall effects in a 2D scene. We will follow-up with the course staff
-					in this case, to discuss the modified project proposal.
-				</p>
+				<h2>Milestone Status</h2>
+				<p>After receiving the feedback from our original <a href="proposal.html">project proposal</a>, our
+          team has pivoted from our original project idea to simulating real-time
+          water-drop animations in order to ensure we have a more tangible final
+          project that nails down our ultimate goals of this project. By the final
+          deliverable, we hope to implement:</p>
+          <ol>
+            <li>Deformation operators that will evolve the water droplets over
+              time based on surface tension and varying hydrophilic and hydrophobic
+              behavior effects based on solid surface materials and contact angles.</li>
+            <li>Mesh operators that will ultimately determine how water droplets interact
+              with each other by performing mesh splitting and collisions for specific scenes we are rendering.</li>
+          </ol>
+        <p>
+          <br>
+          After defining all these operators, we will then be able to apply them over
+          various scenes to demonstrate water-droplet and surface interactions.
+          <br><br>
+          In the following days, we then moved on to researching what rendering pipeline
+          will be the most efficient for our project - ultimately deciding on using
+          the Blender Python API to write scripts that will define our final water-droplet
+          animation behaviors. We all then split up tasks to complete varying parts
+          of our project, where Jessica worked on implementing a deformation operator
+          based on external forces and applying mesh operations that allow the
+          individual vertices in the water droplet to move, Varsha worked on
+          gravity-like effects on water droplets to animate falling water droplets
+          as well as collisions of water-drop vertices against planes, and Karina
+          worked on creating script that initializes the Cornell box scene we will
+          be using in our final deliverable when implementing water-surface interactions
+          as well as creating the water material on Blender for our water droplets.
+          <br><br>
+          The following is a link to a short video showing the progress we have made so
+          far with our real-time water-drop animation: [insert link]
+          <br><br>
+          Based on our progress so far, we have reframed our weekly schedule to ensure
+          that we will be able to complete our goals by the final due date:</p>
+          <ol>
+            <li>Week of April 29: complete Milestone Deliverable and continue working
+              on deformation operators (external forces, mean curvature flow, contact
+              angle, and volume correction)</li>
+            <li>Week of May 6: complete mesh operators (mesh splitting and collisions),
+              generate multiple scenes that demonstrate varying interactions between water
+              droplets and surfaces, and complete our project poster for presentations on May 10th.</li>
+            <li>Week of May 13: debug our scripts to ensure our model is working as expected, complete final deliverables.</li>
+          </ol>
 				<br><br><br><br>
-
 	</div>
 	</body>
 </html>

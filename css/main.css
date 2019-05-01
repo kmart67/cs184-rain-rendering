@@ -21,12 +21,14 @@ h3 {
   text-align: center;
 }
 
+div {
+  margin: 100px;
+}
+
 p {
   font-family: 'Poppins', sans-serif;
   font-weight: 200;
   font-size: 16px;
-  margin-left: 100px;
-  margin-right: 100px;
 }
 
 .center {
@@ -47,7 +49,7 @@ li {
 
 ol {
   list-style-type: circle;
-  margin-left: 100px;
+  margin-left: 50px;
 }
 
 .middle {
@@ -64,16 +66,13 @@ ol {
 
 .column-left {
   float: left;
-  width: 33.333%;
 }
 
 .column-right {
   float: right;
-  width: 33.333%;
 }
 .column-center {
   display: inline-block;
-  width: 33.333%;
 }
 
 .row {
