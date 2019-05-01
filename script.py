@@ -1,6 +1,6 @@
 import bpy
 import math
-from mathutils import Vector
+import mathutils
 
 addsphere = bpy.ops.mesh.primitive_uv_sphere_add
 addplane = bpy.ops.mesh.primitive_plane_add
@@ -10,7 +10,10 @@ scene = bpy.context.scene
 # global constants
 SURFACE_OFFSET = 0.0001
 FRICTION = 0.0001
-GRAVITY = -0.098
+GRAVITY = 9.8
+
+#def clearscene():
+
 
 def initscene():
     #adding the open box
@@ -112,6 +115,16 @@ def fall_and_collide(droplets, plane):
 #    point = plane.data.vertices[0]
 #    normal = plane.normal
 
+    # Construct plane normal.
+    p1 = plane.matrix_world * plane.data.vertices[0].co
+    p2 = plane.matrix_world * plane.data.vertices[1].co
+    p3 = plane.matrix_world * plane.data.vertices[2].co
+    plane_normal = mathutils.geometry.normal([p1, p2, p3])
+
+    obj = bpy.context.active_object
+    mat = obj.matrix_world
+
+    # Animate all droplets in the scene.
     for index in range(len(droplets)):
         # Create animation for this droplet.
         action = bpy.data.actions.new("DropletAnimation[%d]" % index)
@@ -121,16 +134,25 @@ def fall_and_collide(droplets, plane):
         mesh.animation_data_create()
         mesh.animation_data.action = action
         data_path = "vertices[%d].co"
+        dt = 0.01
 
         # Iterate over all vertices in this droplet's mesh and change their positions
         # based on external forces.
         for v in mesh.vertices:
             # Create keyframes for this vertex.
             fcurves = [action.fcurves.new(data_path % v.index, i) for i in range(3)]
-            co_rest = v.co
+            co_kf = v.co
+            velocity = mathutils.Vector((0.0, 0.0, 0.0))
 
-            for i in range(50):
-                co_kf = co_rest + i * GRAVITY * Vector((0, 0, 1))
+            for i in range(70):
+                co_kf = co_kf + velocity * dt
+                velocity.z -= GRAVITY * dt
+
+                vertex_position = mat * v.co
+                d = mathutils.geometry.distance_point_to_plane(vertex_position, p1, plane_normal)
+                if d < 0:
+                    co_kf = co_kf - plane_normal * plane_normal.dot(co_kf - p1)
+
                 insert_keyframe(fcurves, i, co_kf)
 
     # # Iterate over all droplets to check for collisions.
