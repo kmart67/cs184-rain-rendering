@@ -91,10 +91,51 @@ def initscene():
     # add droplet
     addsphere(location=(0,0,1.49), size=0.05)
     bpy.context.active_object.name = 'Droplet'
+    bpy.ops.object.shade_smooth()
+    bpy.context.scene.objects.active = bpy.data.objects["Droplet"]
+
+    ob = bpy.context.active_object
+
+    # Create material
+    mat = bpy.data.materials.new(name="MaterialWater")
+
+    # Assign it to object
+    if len(ob.data.materials):
+        # assign to 1st material slot
+        ob.data.materials[0] = mat
+    else:
+        # no solots
+        ob.data.materials.append(mat)
+
+    # Activated material -> cmat
+    cmat = ob.active_material
+    cmat.use_nodes = True
+    TreeNodes = cmat.node_tree
+    links = TreeNodes.links
+
+    # Remove nodes (clean it)
+    for node in TreeNodes.nodes:
+        TreeNodes.nodes.remove(node)
+
+    # Add the guy to the node view
+    # Output node
+    node_out = TreeNodes.nodes.new(type='ShaderNodeOutputMaterial')
+    node_out.location = 200, 0
+
+    # Glass BSDF
+    node_glass = TreeNodes.nodes.new(type='ShaderNodeBsdfGlass')
+    node_glass.location = 0, 180
+    node_glass.distribution = 'GGX'
+    node_glass.inputs['Color'].default_value = (1.0, 1.0, 1.0, 1)
+    node_glass.inputs['Roughness'].default_value = 0.0
+    node_glass.inputs['IOR'].default_value = 1.330
+
+    # Connect the guys
+    links.new(node_glass.outputs[0], node_out.inputs[0])
 
     droplet = bpy.data.objects['Droplet']
 
-    fall_and_collide([droplet], bpy.data.objects['Floor'])
+    fall_and_collide([droplet], bpy.context.scene.objects['Floor'])
 
 """
 Inserts keyframe for mesh modifications.
@@ -121,14 +162,14 @@ def fall_and_collide(droplets, plane):
     p3 = plane.matrix_world * plane.data.vertices[2].co
     plane_normal = mathutils.geometry.normal([p1, p2, p3])
 
-    obj = bpy.context.active_object
-    mat = obj.matrix_world
-
     # Animate all droplets in the scene.
     for index in range(len(droplets)):
+        obj = droplets[index]
+        mat = obj.matrix_world
+
         # Create animation for this droplet.
         action = bpy.data.actions.new("DropletAnimation[%d]" % index)
-        mesh = droplets[index].data
+        mesh = obj.data
         mesh.animation_data_create()
         mesh.animation_data.action = action
         mesh.animation_data_create()
@@ -148,37 +189,36 @@ def fall_and_collide(droplets, plane):
                 co_kf = co_kf + velocity * dt
                 velocity.z -= GRAVITY * dt
 
-                vertex_position = mat * v.co
+                vertex_position = mat * co_kf
                 d = mathutils.geometry.distance_point_to_plane(vertex_position, p1, plane_normal)
                 if d < 0:
-                    co_kf = co_kf - plane_normal * plane_normal.dot(co_kf - p1)
-
+                    co_kf = co_kf - plane_normal * d
                 insert_keyframe(fcurves, i, co_kf)
-
-    # # Iterate over all droplets to check for collisions.
-    # for d in droplets:
-    #     # Track the largest necessary displacement to prevent droplet from going through plane.
-    #     # largest_offset = -1
-    #     for vertex in d.data.vertices:
-    #         position = vertex.co
-    #         last_position = vertex.last_position
-    #
-    #         # Move droplet downwards.
-    #         position = (position.x, position.y, position.z - GRAVITY)
-#
-            # If the droplet has crossed the plane, store the needed displacement.
-        #     if (normal.dot(position - point) > 0) != (normal.dot(last_position - point) > 0):
-        #         tangent_point = position - normal * normal.dot(position - point);
-        #         offset = (tangent_point - last_position) * (1.0 - FRICTION) + normal * SURFACE_OFFSET
-        #         if offset > largest_offset:
-        #             largest_offset = offset
-        # if largest_offset > 0:
-        #     for vertex in d.data.vertices:
-        #         vertex.co = position + largest_offset
-        #         vertex.keyframe_insert(data_path="co", index=-1)
 
 class SurfacePlane:
     def __init__(self, friction):
         self.friction
+
+def delete_scene_objects(scene=None):
+    """Delete a scene and all its objects."""
+    #
+    # Sort out the scene object.
+    if scene is None:
+        # Not specified: it's the current scene.
+        scene = bpy.context.screen.scene
+    else:
+        if isinstance(scene, str):
+            # Specified by name: get the scene object.
+            scene = bpy.data.scenes[scene]
+        # Otherwise, assume it's a scene object already.
+    #
+    # Remove objects.
+    for object_ in scene.objects:
+        bpy.data.objects.remove(object_, True)
+
+# Tests.
+#
+# Delete the current scene.
+delete_scene_objects()
 
 initscene()
