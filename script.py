@@ -12,7 +12,8 @@ scene = bpy.context.scene
 # global constants
 SURFACE_OFFSET = 0.0001
 FRICTION = 0.0001
-GRAVITY = 9.8
+GRAVITY = mathutils.Vector((0.0, 0.0, -9.8))
+FRICTION_COEFF = 0.9
 
 #def clearscene():
 
@@ -91,7 +92,7 @@ def initscene():
     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
     # add droplet
-    addsphere(location=(0,0,1.49), size=0.05)
+    addsphere(location=(0,0,0.1), size=0.05)
     bpy.context.active_object.name = 'Droplet'
     bpy.ops.object.shade_smooth()
     bpy.context.scene.objects.active = bpy.data.objects["Droplet"]
@@ -152,13 +153,19 @@ def add_new_attributes(droplet):
         bm.from_mesh(mesh)
 
     collided = bm.verts.layers.int.new('collided')
+    last_position = bm.verts.layers.shape.new('last_position')
+    velocity = bm.verts.layers.shape.new('velocity')
 
     for v in bm.verts:
         v[collided] = False
+        v[last_position] = v.co
+        v[velocity] = mathutils.Vector((0.0, 0.0, 0.0))
 
     bm.to_mesh(mesh)
 
-    return {'collided': collided}
+    return {'bmesh': bm, 'mesh': mesh,
+            'collided': collided, 'last_position': last_position,
+            'velocity': velocity}
 
 """
 Inserts keyframe for mesh modifications.
@@ -175,11 +182,12 @@ droplet and the rigid body object inputted.
 @plane      plane against which to check for collision
 """
 def fall_and_collide(droplets, plane, layer_dict):
-    # Get random point on plane.
-#    point = plane.data.vertices[0]
-#    normal = plane.normal
-
+    # Get custom attributes.
+    mesh = layer_dict['mesh']
+    bm = layer_dict['bmesh']
     collided = layer_dict['collided']
+    last_position = layer_dict['last_position']
+    velocity = layer_dict['velocity']
 
     # Construct plane normal.
     p1 = plane.matrix_world * plane.data.vertices[0].co
@@ -194,16 +202,11 @@ def fall_and_collide(droplets, plane, layer_dict):
 
         # Create animation for this droplet.
         action = bpy.data.actions.new("DropletAnimation[%d]" % index)
-        mesh = obj.data
-        if mesh.is_editmode:
-            bm = bmesh.from_edit_mesh(mesh)
-        else:
-            bm = bmesh.new()
-            bm.from_mesh(mesh)
         mesh.animation_data_create()
         mesh.animation_data.action = action
-        data_path = "vertices[%d].co"
-        dt = 0.01
+        location_datapath = "vertices[%d].co"
+        velocity_datapath = "vertices[%d].velocity"
+        dt = 0.05
 
         # Iterate over all vertices in this droplet's mesh and change their positions
         # based on external forces.
@@ -211,22 +214,52 @@ def fall_and_collide(droplets, plane, layer_dict):
         # Step 4.1
         for v in bm.verts:
             # Create keyframes for this vertex.
-            fcurves = [action.fcurves.new(data_path % v.index, i) for i in range(3)]
-            co_kf = v.co
-            velocity = mathutils.Vector((0.0, 0.0, 0.0))
+            fcurves_location = [action.fcurves.new(location_datapath % v.index, i) for i in range(3)]
+            fcurves_velocity = [action.fcurves.new(velocity_datapath % v.index, i) for i in range(3)]
+            x_old = v.co
+            v_old = v[velocity]
 
-            for i in range(70):
-                co_kf = co_kf + velocity * dt
-                velocity.z -= GRAVITY * dt
+            for i in range(2):
+                # Apply gravity force and use Forward Euler for position update.
+                v_new = v_old + GRAVITY * dt
+                x_new = x_old + v_new * dt
 
-                vertex_position = mat * co_kf
+                # Check distance to plane in world coordinates.
+                vertex_position = mat * x_new
                 d = mathutils.geometry.distance_point_to_plane(vertex_position, p1, plane_normal)
+
+                # Check for collision.
                 if d < 0:
-                    co_kf = co_kf - plane_normal * d
+                    print('collision')
+                    # If collision, project vertex to closest point on plane surface
+                    # and update velocity. Ignore viscosity for now.
                     v[collided] = True
 
+                    # Find surface projection and velocity at surface.
+                    x_surface = x_old - plane_normal * d
+                    x_new = x_surface
+                    v_s = (x_surface - x_old) / dt
+                    surface_normal = mathutils.geometry.normal([p1, p2, x_new])
+
+                    # Update velocity.
+                    v_new = v_old - (v_old - v_s).dot(surface_normal) * surface_normal
+
+                    # Apply friction force.
+                    # if v_old.magnitude < FRICTION_COEFF:
+                    #     v_new = mathutils.Vector((0.0, 0.0, 0.0))
+                    # else:
+                    #     v_new = v_old - FRICTION_COEFF * v_old / v_old.magnitude
+
+                    # Perform position update.
+                    # x_new = x_old + (v_new - v_old) * dt
+
                 bm.to_mesh(mesh)
-                insert_keyframe(fcurves, i, co_kf)
+                insert_keyframe(fcurves_location, i, x_new)
+                insert_keyframe(fcurves_velocity, i, v_new)
+
+                # Update old values.
+                x_old = x_new
+                v_old = v_new
 
         # Step 4.3
         contact_verts = []
