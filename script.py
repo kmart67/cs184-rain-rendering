@@ -1,4 +1,6 @@
 import bpy
+import bmesh
+
 import math
 import mathutils
 
@@ -170,8 +172,11 @@ def fall_and_collide(droplets, plane):
         # Create animation for this droplet.
         action = bpy.data.actions.new("DropletAnimation[%d]" % index)
         mesh = obj.data
-        mesh.animation_data_create()
-        mesh.animation_data.action = action
+        if mesh.is_editmode:
+            bm = bmesh.from_edit_mesh(mesh)
+        else:
+            bm = bmesh.new()
+            bm.from_mesh(mesh)
         mesh.animation_data_create()
         mesh.animation_data.action = action
         data_path = "vertices[%d].co"
@@ -179,7 +184,7 @@ def fall_and_collide(droplets, plane):
 
         # Iterate over all vertices in this droplet's mesh and change their positions
         # based on external forces.
-        for v in mesh.vertices:
+        for v in bm.verts:
             # Create keyframes for this vertex.
             fcurves = [action.fcurves.new(data_path % v.index, i) for i in range(3)]
             co_kf = v.co
@@ -193,6 +198,8 @@ def fall_and_collide(droplets, plane):
                 d = mathutils.geometry.distance_point_to_plane(vertex_position, p1, plane_normal)
                 if d < 0:
                     co_kf = co_kf - plane_normal * d
+
+                bm.to_mesh(mesh)
                 insert_keyframe(fcurves, i, co_kf)
 
 class SurfacePlane:
