@@ -136,8 +136,29 @@ def initscene():
     links.new(node_glass.outputs[0], node_out.inputs[0])
 
     droplet = bpy.data.objects['Droplet']
+    layer_dict = add_new_attributes(droplet)
 
-    fall_and_collide([droplet], bpy.context.scene.objects['Floor'])
+    fall_and_collide([droplet], bpy.context.scene.objects['Floor'], layer_dict)
+
+"""
+Add new droplet attributes to the provided instance.
+"""
+def add_new_attributes(droplet):
+    mesh = droplet.data
+    if mesh.is_editmode:
+        bm = bmesh.from_edit_mesh(mesh)
+    else:
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+
+    collided = bm.verts.layers.int.new('collided')
+
+    for v in bm.verts:
+        v[collided] = False
+
+    bm.to_mesh(mesh)
+
+    return {'collided': collided}
 
 """
 Inserts keyframe for mesh modifications.
@@ -153,10 +174,12 @@ droplet and the rigid body object inputted.
 @droplets   list of UV Sphere instances representing water droplets
 @plane      plane against which to check for collision
 """
-def fall_and_collide(droplets, plane):
+def fall_and_collide(droplets, plane, layer_dict):
     # Get random point on plane.
 #    point = plane.data.vertices[0]
 #    normal = plane.normal
+
+    collided = layer_dict['collided']
 
     # Construct plane normal.
     p1 = plane.matrix_world * plane.data.vertices[0].co
@@ -184,6 +207,8 @@ def fall_and_collide(droplets, plane):
 
         # Iterate over all vertices in this droplet's mesh and change their positions
         # based on external forces.
+
+        # Step 4.1
         for v in bm.verts:
             # Create keyframes for this vertex.
             fcurves = [action.fcurves.new(data_path % v.index, i) for i in range(3)]
@@ -198,9 +223,24 @@ def fall_and_collide(droplets, plane):
                 d = mathutils.geometry.distance_point_to_plane(vertex_position, p1, plane_normal)
                 if d < 0:
                     co_kf = co_kf - plane_normal * d
+                    v[collided] = True
 
                 bm.to_mesh(mesh)
                 insert_keyframe(fcurves, i, co_kf)
+
+        # Step 4.3
+        contact_verts = []
+        for v in bm.verts:
+            if v[collided]:
+                no_col = True
+                for e in v.link_edges:
+                    v_other = e.other_vert(v)
+                    if v_other[collided]:
+                        no_col = False
+                        break
+                if no_col:
+                    contact_verts.append(v)
+                    print('faces', v.link_faces)
 
 class SurfacePlane:
     def __init__(self, friction):
