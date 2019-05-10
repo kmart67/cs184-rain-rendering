@@ -16,35 +16,14 @@ GRAVITY = 9.8
 CONTACT_ANGLE = math.radians(90)
 RECEDING_ANGLE = math.radians(30)
 
-
-def initscene():
-    #floor
-    addplane(location=(0,0,0))
-    bpy.context.active_object.name = 'Floor'
-    mat = bpy.data.materials.new('FloorMaterial')
-    bpy.context.active_object.data.materials.append(mat)
-    bpy.context.object.active_material.diffuse_color = (1, 1, 1)
-
-    #adding camera
-    bpy.ops.object.camera_add(location=(0,3,0), rotation=(math.radians(90), 0, math.radians(180)))
-    bpy.context.active_object.name = 'Camera'
-    bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
-    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-
-    #adding the glass plane
-    # addplane(location=(0,0,0.75), rotation=(math.radians(90), 0, 0))
-    # bpy.context.active_object.name = 'Glass'
-    # bpy.ops.transform.translate()
-    # bpy.context.object.scale[0] = 0.5
-    # bpy.context.object.scale[1] = 0.5
-    # bpy.context.object.scale[2] = 0.5
-    # bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+def add_droplet(num, loc):
 
     # add droplet
-    addsphere(location=(0,0,0.3), size=0.05)
-    bpy.context.active_object.name = 'Droplet'
+    addsphere(location=loc, size=0.05)
+    name = "Droplet" + str(num)
+    bpy.context.active_object.name = name
     bpy.ops.object.shade_smooth()
-    bpy.context.scene.objects.active = bpy.data.objects["Droplet"]
+    bpy.context.scene.objects.active = bpy.data.objects[name]
 
     ob = bpy.context.active_object
 
@@ -85,10 +64,48 @@ def initscene():
     # Connect the guys
     links.new(node_glass.outputs[0], node_out.inputs[0])
 
-    droplet = bpy.data.objects['Droplet']
-    layer_dict = add_new_attributes(droplet)
 
-    fall_and_collide([droplet], bpy.context.scene.objects['Floor'], layer_dict)
+def initscene():
+    #floor
+    addplane(location=(0,0,0))
+    bpy.context.active_object.name = 'Floor'
+    mat = bpy.data.materials.new('FloorMaterial')
+    bpy.context.active_object.data.materials.append(mat)
+    bpy.context.object.active_material.diffuse_color = (1, 1, 1)
+
+    #adding camera
+    bpy.ops.object.camera_add(location=(0,3,0), rotation=(math.radians(90), 0, math.radians(180)))
+    bpy.context.active_object.name = 'Camera'
+    bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
+    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+
+    #adding the glass plane
+    # addplane(location=(0,0,0.75), rotation=(math.radians(90), 0, 0))
+    # bpy.context.active_object.name = 'Glass'
+    # bpy.ops.transform.translate()
+    # bpy.context.object.scale[0] = 0.5
+    # bpy.context.object.scale[1] = 0.5
+    # bpy.context.object.scale[2] = 0.5
+    # bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+    add_droplet(1, (0,0,0.3))
+    add_droplet(2, (0, 0.1, 0.3))
+
+    droplet1 = bpy.data.objects['Droplet1']
+    layer_dict = add_new_attributes(droplet1)
+
+    droplet2 = bpy.data.objects['Droplet2']
+    layer_dict = add_new_attributes(droplet2)
+
+    # for ob in bpy.context.scene.objects:
+    #     if ob.type == 'MESH':
+    #         ob.select = True
+    #         bpy.context.scene.objects.active = ob
+    #     else:
+    #         ob.select = False
+    #
+    # bpy.ops.object.join()
+
+    fall_and_collide([droplet1, droplet2], bpy.context.scene.objects['Floor'], layer_dict)
 
 """
 Add new droplet attributes to the provided instance.
@@ -108,7 +125,7 @@ def add_new_attributes(droplet):
 
     bm.to_mesh(mesh)
 
-    return {'collided': collided}
+    return {'bmesh': bm, 'mesh': mesh, 'collided': collided}
 
 """
 Inserts keyframe for mesh modifications.
@@ -155,7 +172,8 @@ def fall_and_collide(droplets, plane, layer_dict):
     # Get random point on plane.
 #    point = plane.data.vertices[0]
 #    normal = plane.normal
-
+    bm = layer_dict['bmesh']
+    mesh = layer_dict['mesh']
     collided = layer_dict['collided']
 
     # Construct plane normal.
@@ -214,47 +232,34 @@ def fall_and_collide(droplets, plane, layer_dict):
                 bm.to_mesh(mesh)
                 insert_keyframe(fcurves, i, co_kf)
 
-            # Step 4.3
-            update_frames = 100
+        # Step 4.3
+        update_frames = 100
 
-            for frame in keyframe_collisions.keys():
-                print("frame: " + str(frame))
-                for v in keyframe_collisions[frame]:
-                    #print(v, v.normal)
-                    n_l = mathutils.Vector((0.0, 0.0, 0.0))
+        for frame in keyframe_collisions.keys():
+            print("frame: " + str(frame))
+            for v in keyframe_collisions[frame]:
+                #print(v, v.normal)
+                n_l = mathutils.Vector((0.0, 0.0, 0.0))
 
-                    for f in v.link_faces:
-                        num_collided = 0
+                for f in v.link_faces:
+                    num_collided = 0
 
-                        for v_other in f.verts:
-                            if v_other[collided]:
-                                num_collided += 1
+                    for v_other in f.verts:
+                        if v_other[collided]:
+                            num_collided += 1
 
-                        if num_collided != 3:
-                            n_l += f.normal
+                    if num_collided != 3:
+                        n_l += f.normal
 
-                    if length(n_l) != 0:
-                        theta = angle(n_l, plane_normal)
+                if length(n_l) != 0:
+                    theta = angle(n_l, plane_normal)
 
-                        if theta < CONTACT_ANGLE:
-                            update_frames = min(update_frames, frame)
+                    if theta < CONTACT_ANGLE:
+                        update_frames = min(update_frames, frame)
 
-            for f in range(update_frames, frames):
-                bpy.context.active_object.keyframe_delete('rotation_euler', frame=f)
-
-        # contact_verts = []
-        # for v in bm.verts:
-        #     if v[collided]:
-        #         no_col = True
-        #         for f in v.link_faces:
-        #             print(f.index, f.normal)
-                #     v_other = e.other_vert(v)
-                #     if v_other[collided]:
-                #         no_col = False
-                #         break
-                # if no_col:
-                #     contact_verts.append(v)
-                #     print('faces', v.link_faces)
+            print(update_frames)
+            #for f in range(update_frames, frames):
+                #bpy.context.active_object.keyframe_delete('rotation_euler', frame=f)
 
 
 
