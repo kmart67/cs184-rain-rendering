@@ -13,9 +13,10 @@ scene = bpy.context.scene
 SURFACE_OFFSET = 0.0001
 FRICTION = 0.0001
 GRAVITY = 9.8
-CONTACT_ANGLE = math.radians(90)
+ADVANCING_ANGLE = math.radians(90)
 RECEDING_ANGLE = math.radians(30)
-
+MASS = 1.0
+ALPHA = 0.1
 
 def initscene():
     #floor
@@ -108,7 +109,7 @@ def add_new_attributes(droplet):
 
     bm.to_mesh(mesh)
 
-    return {'collided': collided}
+    return {'bmesh': bm, 'mesh': mesh, 'collided': collided}
 
 """
 Inserts keyframe for mesh modifications.
@@ -116,6 +117,7 @@ Inserts keyframe for mesh modifications.
 def insert_keyframe(fcurves, frame, values):
     for fcu, val in zip(fcurves, values):
         fcu.keyframe_points.insert(frame, val, {'FAST'})
+
 """
 Detects collisions between plane and vertex
 """
@@ -126,6 +128,7 @@ def detect_collision(co_kf, p1, plane_normal, mat):
         co_kf = co_kf - plane_normal * d
         return True, co_kf
     return False, co_kf
+
 """
 Dot product between two vectors.
 """
@@ -155,7 +158,8 @@ def fall_and_collide(droplets, plane, layer_dict):
     # Get random point on plane.
 #    point = plane.data.vertices[0]
 #    normal = plane.normal
-
+    bm = layer_dict['bmesh']
+    mesh = layer_dict['mesh']
     collided = layer_dict['collided']
 
     # Construct plane normal.
@@ -171,16 +175,10 @@ def fall_and_collide(droplets, plane, layer_dict):
 
         # Create animation for this droplet.
         action = bpy.data.actions.new("DropletAnimation[%d]" % index)
-        mesh = obj.data
-        if mesh.is_editmode:
-            bm = bmesh.from_edit_mesh(mesh)
-        else:
-            bm = bmesh.new()
-            bm.from_mesh(mesh)
         mesh.animation_data_create()
         mesh.animation_data.action = action
         data_path = "vertices[%d].co"
-        dt = 0.01
+        dt = 0.05
         frames = 50
 
         # Iterate over all vertices in this droplet's mesh and change their positions
@@ -189,15 +187,17 @@ def fall_and_collide(droplets, plane, layer_dict):
         # Step 4.1
         for v in bm.verts:
             # Create keyframes for this vertex.
-            fcurves = [action.fcurves.new(data_path % v.index, i) for i in range(3)]
+            # fcurves = [action.fcurves.new(data_path % v.index, i) for i in range(3)]
             co_kf = v.co
-            velocity = mathutils.Vector((0.0, 0.0, 0.0))
+            vel = mathutils.Vector((0.0, 0.0, 0.0))
 
             for i in range(frames):
-                co_kf = co_kf + velocity * dt
-                velocity.z -= GRAVITY * dt
+                x_old = co_kf
+                vel_old = vel
+                x_new = x_old + vel * dt
+                vel.z -= GRAVITY * dt
 
-                detected, co_kf = detect_collision(co_kf, p1, plane_normal, mat)
+                detected, x_new = detect_collision(x_new, p1, plane_normal, mat)
                 # vertex_position = mat * co_kf
                 # d = mathutils.geometry.distance_point_to_plane(vertex_position, p1, plane_normal)
                 # if d < 0:
@@ -206,41 +206,111 @@ def fall_and_collide(droplets, plane, layer_dict):
                 if detected:
                     v[collided] = True
 
-                    if i in keyframe_collisions:
-                        keyframe_collisions[i].append(v)
-                    else:
-                        keyframe_collisions[i] = [v]
+                # Save information to insert keyframe later.
+                if i in keyframe_collisions:
+                    keyframe_collisions[i][v] = (x_old, x_new, vel_old, vel)
+                else:
+                    keyframe_collisions[i] = {v: (x_old, x_new, vel_old, vel)}
 
-                bm.to_mesh(mesh)
-                insert_keyframe(fcurves, i, co_kf)
+        # Step 4.3
 
-            # Step 4.3
-            update_frames = 100
+        # Create animation curves.
+        curves_dict = {}
+        for v in bm.verts:
+            fcurves = [action.fcurves.new(data_path % v.index, j) for j in range(3)]
+            curves_dict[v] = fcurves
 
-            for frame in keyframe_collisions.keys():
-                print("frame: " + str(frame))
-                for v in keyframe_collisions[frame]:
-                    #print(v, v.normal)
-                    n_l = mathutils.Vector((0.0, 0.0, 0.0))
+        # Perform contact angle operation and create animation.
+        for i, position_dict in keyframe_collisions.items():
 
+            for v in position_dict:
+                # fcurves = [action.fcurves.new(data_path % v.index, j) for j in range(3)]
+                x_old, x_new, vel_old, vel = position_dict[v]
+
+                # Check for contact vertices.
+                if v[collided]:
+                    face_areas = {}
+                    face_normals = {}
                     for f in v.link_faces:
                         num_collided = 0
 
+                        # Check that other vertices are not collided.
                         for v_other in f.verts:
                             if v_other[collided]:
                                 num_collided += 1
 
+                        # Make sure the face is not a collapsed one (it's a water-air face).
+                        # If the face is collapsed, then all vertices are collided and
+                        # num_collided = 3.
                         if num_collided != 3:
-                            n_l += f.normal
+                            face_normals[f] = f.normal
+                            face_areas[f] = f.calc_area()
 
-                    if length(n_l) != 0:
+                        # Exit once we have found the three faces.
+                        if len(face_areas) == 3:
+                            break
+
+                    # NOTE: THIS MUST HOLD FOR ALL VERTICES ON THE CONTACT LINE.
+                    if len(face_areas) == 3:
+                        # Special logic for contact line vertices.
+
+                        # Calculate area-weighted surface normal.
+                        n_l = mathutils.Vector((0.0, 0.0, 0.0))
+                        total_area = sum(face_areas.values())
+                        for f in face_areas:
+                            n_l += face_normals[f] * (face_areas[f] / total_area)
+
+                        # Calculate projection of surface normal onto the plane.
+                        n_p = n_l - n_l.dot(plane_normal) * plane_normal
+
+                        # Calculate the bounding force, applied to the contact vertex.
+                        f_bound = 0
                         theta = angle(n_l, plane_normal)
+                        if theta > RECEDING_ANGLE and theta < ADVANCING_ANGLE:
+                            f_bound = 0
+                        elif theta < RECEDING_ANGLE:
+                            f_bound = ALPHA * (theta - RECEDING_ANGLE) * n_p / n_p.magnitude
+                        elif theta > ADVANCING_ANGLE:
+                            f_bound = ALPHA * (theta - ADVANCING_ANGLE) * n_p / n_p.magnitude
 
-                        if theta < CONTACT_ANGLE:
-                            update_frames = min(update_frames, frame)
+                        # Change position to match force bound if needed.
+                        accel = vel / dt
+                        if accel * MASS > f_bound:
+                            bound_vel = f_bound / MASS * dt
+                            x_new = x_old + (bound_vel - vel_old) * dt
 
-            for f in range(update_frames, frames):
-                bpy.context.active_object.keyframe_delete('rotation_euler', frame=f)
+                bm.to_mesh(mesh)
+                insert_keyframe(curves_dict[v], i, x_new)
+
+            # Step 4.3
+            # update_frames = 100
+            #
+            # for frame in keyframe_collisions.keys():
+            #     print("frame: " + str(frame))
+            #     for v in keyframe_collisions[frame]:
+            #         #print(v, v.normal)
+            #         n_l = mathutils.Vector((0.0, 0.0, 0.0))
+            #
+            #         for f in v.link_faces:
+            #             num_collided = 0
+            #
+            #             for v_other in f.verts:
+            #                 if v_other[collided]:
+            #                     num_collided += 1
+            #
+            #             if num_collided != 3:
+            #                 n_l += f.normal
+            #
+            #         if length(n_l) != 0:
+            #             theta = angle(n_l, plane_normal)
+            #
+            #             if theta < CONTACT_ANGLE:
+            #                 update_frames = min(update_frames, frame)
+            #
+            #                 print(update_frames)
+
+            # for f in range(update_frames, frames):
+            #     bpy.context.active_object.keyframe_delete('rotation_euler', frame=f)
 
         # contact_verts = []
         # for v in bm.verts:
