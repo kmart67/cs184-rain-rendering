@@ -13,10 +13,10 @@ scene = bpy.context.scene
 SURFACE_OFFSET = 0.0001
 FRICTION = 0.0001
 GRAVITY = 9.8
-ADVANCING_ANGLE = math.radians(90)
-RECEDING_ANGLE = math.radians(30)
+ADVANCING_ANGLE = 90
+RECEDING_ANGLE = 30
 MASS = 1.0
-ALPHA = 0.1
+ALPHA = 1.0
 
 def initscene():
     #floor
@@ -208,9 +208,9 @@ def fall_and_collide(droplets, plane, layer_dict):
 
                 # Save information to insert keyframe later.
                 if i in keyframe_collisions:
-                    keyframe_collisions[i][v] = (x_old, x_new, vel_old, vel)
+                    keyframe_collisions[i][v] = (x_old, x_new, vel_old, vel, detected)
                 else:
-                    keyframe_collisions[i] = {v: (x_old, x_new, vel_old, vel)}
+                    keyframe_collisions[i] = {v: (x_old, x_new, vel_old, vel, detected)}
 
         # Step 4.3
 
@@ -225,10 +225,10 @@ def fall_and_collide(droplets, plane, layer_dict):
 
             for v in position_dict:
                 # fcurves = [action.fcurves.new(data_path % v.index, j) for j in range(3)]
-                x_old, x_new, vel_old, vel = position_dict[v]
+                x_old, x_new, vel_old, vel, collision_occured = position_dict[v]
 
                 # Check for contact vertices.
-                if v[collided]:
+                if collision_occured:
                     face_areas = {}
                     face_normals = {}
                     for f in v.link_faces:
@@ -245,10 +245,10 @@ def fall_and_collide(droplets, plane, layer_dict):
                         if num_collided != 3:
                             face_normals[f] = f.normal
                             face_areas[f] = f.calc_area()
-
-                        # Exit once we have found the three faces.
-                        if len(face_areas) == 3:
-                            break
+                        #
+                        # # Exit once we have found the three faces.
+                        # if len(face_areas) == 3:
+                        #     break
 
                     # NOTE: THIS MUST HOLD FOR ALL VERTICES ON THE CONTACT LINE.
                     if len(face_areas) == 3:
@@ -265,13 +265,13 @@ def fall_and_collide(droplets, plane, layer_dict):
 
                         # Calculate the bounding force, applied to the contact vertex.
                         f_bound = 0
-                        theta = angle(n_l, plane_normal)
+                        theta = math.degrees(angle(n_l, plane_normal))
                         if theta > RECEDING_ANGLE and theta < ADVANCING_ANGLE:
                             f_bound = 0
                         elif theta < RECEDING_ANGLE:
-                            f_bound = ALPHA * (theta - RECEDING_ANGLE) * n_p / n_p.magnitude
+                            f_bound = ALPHA * (theta - RECEDING_ANGLE) * n_p / (n_p.magnitude ** 2)
                         elif theta > ADVANCING_ANGLE:
-                            f_bound = ALPHA * (theta - ADVANCING_ANGLE) * n_p / n_p.magnitude
+                            f_bound = ALPHA * (theta - ADVANCING_ANGLE) * n_p / (n_p.magnitude ** 2)
 
                         # Change position to match force bound if needed.
                         accel = vel / dt
