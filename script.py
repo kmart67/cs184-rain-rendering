@@ -13,7 +13,7 @@ scene = bpy.context.scene
 SURFACE_OFFSET = 0.0001
 FRICTION = 0.0001
 GRAVITY = 9.8
-CONTACT_ANGLE = math.radians(45)
+CONTACT_ANGLE = math.radians(90)
 RECEDING_ANGLE = math.radians(30)
 
 
@@ -214,31 +214,33 @@ def fall_and_collide(droplets, plane, layer_dict):
                 bm.to_mesh(mesh)
                 insert_keyframe(fcurves, i, co_kf)
 
-        # Step 4.3
-        update_frames = 100
-        
-        for frame in keyframe_collisions.keys():
-            print("frame: " + str(frame))
-            for v in keyframe_collisions[frame]:
-                #print(v, v.normal)
-                n_l = mathutils.Vector((0.0, 0.0, 0.0))
+            # Step 4.3
+            update_frames = 100
 
-                for f in v.link_faces:
-                    num_collided = 0
+            for frame in keyframe_collisions.keys():
+                print("frame: " + str(frame))
+                for v in keyframe_collisions[frame]:
+                    #print(v, v.normal)
+                    n_l = mathutils.Vector((0.0, 0.0, 0.0))
 
-                    for v_other in f.verts:
-                        if v_other[collided]:
-                            num_collided += 1
+                    for f in v.link_faces:
+                        num_collided = 0
 
-                    if num_collided != 3:
-                        n_l += f.normal
+                        for v_other in f.verts:
+                            if v_other[collided]:
+                                num_collided += 1
 
-                if length(n_l) != 0:
-                    theta = angle(n_l, plane_normal)
-                
-                    if theta < CONTACT_ANGLE:
-                        update_frames = min(update_frames, frame)
-        print(update_frames)
+                        if num_collided != 3:
+                            n_l += f.normal
+
+                    if length(n_l) != 0:
+                        theta = angle(n_l, plane_normal)
+
+                        if theta < CONTACT_ANGLE:
+                            update_frames = min(update_frames, frame)
+
+            for f in range(update_frames, frames):
+                bpy.context.active_object.keyframe_delete('rotation_euler', frame=f)
 
         # contact_verts = []
         # for v in bm.verts:
