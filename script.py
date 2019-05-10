@@ -42,10 +42,11 @@ def initscene():
     # bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
     # add droplet
-    addsphere(location=(0,0,0.3), size=0.05)
-    bpy.context.active_object.name = 'Droplet'
+    addsphere(location=loc, size=0.05)
+    name = "Droplet" + str(num)
+    bpy.context.active_object.name = name
     bpy.ops.object.shade_smooth()
-    bpy.context.scene.objects.active = bpy.data.objects["Droplet"]
+    bpy.context.scene.objects.active = bpy.data.objects[name]
 
     ob = bpy.context.active_object
 
@@ -86,10 +87,48 @@ def initscene():
     # Connect the guys
     links.new(node_glass.outputs[0], node_out.inputs[0])
 
-    droplet = bpy.data.objects['Droplet']
-    layer_dict = add_new_attributes(droplet)
 
-    fall_and_collide([droplet], bpy.context.scene.objects['Floor'], layer_dict)
+def initscene():
+    #floor
+    addplane(location=(0,0,0))
+    bpy.context.active_object.name = 'Floor'
+    mat = bpy.data.materials.new('FloorMaterial')
+    bpy.context.active_object.data.materials.append(mat)
+    bpy.context.object.active_material.diffuse_color = (1, 1, 1)
+
+    #adding camera
+    bpy.ops.object.camera_add(location=(0,3,0), rotation=(math.radians(90), 0, math.radians(180)))
+    bpy.context.active_object.name = 'Camera'
+    bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
+    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+
+    #adding the glass plane
+    # addplane(location=(0,0,0.75), rotation=(math.radians(90), 0, 0))
+    # bpy.context.active_object.name = 'Glass'
+    # bpy.ops.transform.translate()
+    # bpy.context.object.scale[0] = 0.5
+    # bpy.context.object.scale[1] = 0.5
+    # bpy.context.object.scale[2] = 0.5
+    # bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+    add_droplet(1, (0,0,0.3))
+    add_droplet(2, (0, 0.1, 0.3))
+
+    droplet1 = bpy.data.objects['Droplet1']
+    layer_dict = add_new_attributes(droplet1)
+
+    droplet2 = bpy.data.objects['Droplet2']
+    layer_dict = add_new_attributes(droplet2)
+
+    # for ob in bpy.context.scene.objects:
+    #     if ob.type == 'MESH':
+    #         ob.select = True
+    #         bpy.context.scene.objects.active = ob
+    #     else:
+    #         ob.select = False
+    #
+    # bpy.ops.object.join()
+
+    fall_and_collide([droplet1, droplet2], bpy.context.scene.objects['Floor'], layer_dict)
 
 """
 Add new droplet attributes to the provided instance.
