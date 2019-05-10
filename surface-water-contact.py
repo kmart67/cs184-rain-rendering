@@ -1,4 +1,6 @@
 import bpy
+import bmesh
+
 import math
 import mathutils
 
@@ -11,9 +13,12 @@ scene = bpy.context.scene
 SURFACE_OFFSET = 0.0001
 FRICTION = 0.0001
 GRAVITY = 9.8
+ADVANCING_ANGLE = 90
+RECEDING_ANGLE = 30
+MASS = 1.0
+ALPHA = 1.0
 
 def initscene():
-
     #floor
     addplane(location=(0,0,0))
     bpy.context.active_object.name = 'Floor'
@@ -27,11 +32,21 @@ def initscene():
     bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
+    #adding the glass plane
+    # addplane(location=(0,0,0.75), rotation=(math.radians(90), 0, 0))
+    # bpy.context.active_object.name = 'Glass'
+    # bpy.ops.transform.translate()
+    # bpy.context.object.scale[0] = 0.5
+    # bpy.context.object.scale[1] = 0.5
+    # bpy.context.object.scale[2] = 0.5
+    # bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+
     # add droplet
-    addsphere(location=(0,0,1.49), size=0.05)
-    bpy.context.active_object.name = 'Droplet'
+    addsphere(location=(0,0,0.3), size=0.05)
+    name = "Droplet1"
+    bpy.context.active_object.name = name
     bpy.ops.object.shade_smooth()
-    bpy.context.scene.objects.active = bpy.data.objects["Droplet"]
+    bpy.context.scene.objects.active = bpy.data.objects[name]
 
     ob = bpy.context.active_object
 
@@ -72,9 +87,30 @@ def initscene():
     # Connect the guys
     links.new(node_glass.outputs[0], node_out.inputs[0])
 
-    droplet = bpy.data.objects['Droplet']
+    droplet1 = bpy.data.objects['Droplet1']
+    layer_dict = add_new_attributes(droplet1)
 
-    fall_and_collide([droplet], bpy.context.scene.objects['Floor'])
+    fall_and_collide([droplet1], bpy.context.scene.objects['Floor'], layer_dict)
+
+"""
+Add new droplet attributes to the provided instance.
+"""
+def add_new_attributes(droplet):
+    mesh = droplet.data
+    if mesh.is_editmode:
+        bm = bmesh.from_edit_mesh(mesh)
+    else:
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+
+    collided = bm.verts.layers.int.new('collided')
+
+    for v in bm.verts:
+        v[collided] = False
+
+    bm.to_mesh(mesh)
+
+    return {'bmesh': bm, 'mesh': mesh, 'collided': collided}
 
 """
 Inserts keyframe for mesh modifications.
@@ -84,16 +120,48 @@ def insert_keyframe(fcurves, frame, values):
         fcu.keyframe_points.insert(frame, val, {'FAST'})
 
 """
+Detects collisions between plane and vertex
+"""
+def detect_collision(co_kf, p1, plane_normal, mat):
+    vertex_position = mat * co_kf
+    d = mathutils.geometry.distance_point_to_plane(vertex_position, p1, plane_normal)
+    if d < 0:
+        co_kf = co_kf - plane_normal * d
+        return True, co_kf
+    return False, co_kf
+
+"""
+Dot product between two vectors.
+"""
+def dot(v1, v2):
+    return sum((a*b) for a, b in zip(v1, v2))
+
+"""
+Length of a vector
+"""
+def length(v):
+  return math.sqrt(dot(v, v))
+
+"""
+Angle between two vectors
+"""
+def angle(v1, v2):
+  return math.acos(dot(v1, v2) / (length(v1) * length(v2)))
+
+"""
 Have the droplet fall for one time frame, and check for collisions between any
 droplet and the rigid body object inputted.
 
 @droplets   list of UV Sphere instances representing water droplets
 @plane      plane against which to check for collision
 """
-def fall_and_collide(droplets, plane):
+def fall_and_collide(droplets, plane, layer_dict):
     # Get random point on plane.
 #    point = plane.data.vertices[0]
 #    normal = plane.normal
+    bm = layer_dict['bmesh']
+    mesh = layer_dict['mesh']
+    collided = layer_dict['collided']
 
     # Construct plane normal.
     p1 = plane.matrix_world * plane.data.vertices[0].co
@@ -108,38 +176,101 @@ def fall_and_collide(droplets, plane):
 
         # Create animation for this droplet.
         action = bpy.data.actions.new("DropletAnimation[%d]" % index)
-        mesh = obj.data
-        mesh.animation_data_create()
-        mesh.animation_data.action = action
         mesh.animation_data_create()
         mesh.animation_data.action = action
         data_path = "vertices[%d].co"
         dt = 0.01
-        iterations = 70
+        frames = 100
 
-        for iter in range(iterations):
-            # Iterate over all vertices in this droplet's mesh and change their positions
-            # based on external forces.
-            for v in mesh.vertices:
+        # Iterate over all vertices in this droplet's mesh and change their positions
+        # based on external forces.
+        vertex_info = {}
+        curves_dict = {}
+        for i in range(frames):
+            # Step 4.1
+            collided_vertices = []
+            for v in bm.verts:
                 # Create keyframes for this vertex.
-                fcurves = [action.fcurves.new(data_path % v.index, i) for i in range(3)]
-                #position of the vertex
                 co_kf = v.co
-                #initializing velocity to 0
-                velocity = mathutils.Vector((0.0, 0.0, 0.0))
 
-                #updating position of vertex
-                co_kf = co_kf + velocity * dt
-                #updating velocity
-                velocity.z -= GRAVITY * dt
+                if i == 0:
+                    fcurves = [action.fcurves.new(data_path % v.index, j) for j in range(3)]
+                    curves_dict[v.index] = fcurves
+                    vertex_info[v] = [mathutils.Vector((0.0, 0.0, 0.0)), mathutils.Vector((0.0, 0.0, 0.0)), v.co, v.co]
 
-                vertex_position = mat * co_kf
-                #detecting collision with plane
-                d = mathutils.geometry.distance_point_to_plane(vertex_position, p1, plane_normal)
-                if d < 0:
-                    co_kf = co_kf - plane_normal * d
+                _, vel_old, _, x_old = vertex_info[v]
+                x_new = x_old + vel_old * dt
+                vel = vel_old
+                vel.z -= GRAVITY * dt
 
-                insert_keyframe(fcurves, iter, co_kf)
+                detected, x_new = detect_collision(x_new, p1, plane_normal, mat)
+
+                if detected:
+                    v[collided] = True
+                    collided_vertices.append(v)
+
+                vertex_info[v] = [vel_old, vel, x_old, x_new]
+
+            for v in collided_vertices:
+
+                vel_old, vel, x_old, x_new = vertex_info[v]
+
+                face_areas = {}
+                face_normals = {}
+                for f in v.link_faces:
+                    num_collided = 0
+
+                    # Check that other vertices are not collided.
+                    for v_other in f.verts:
+                        if v_other[collided]:
+                            num_collided += 1
+
+                    # Make sure the face is not a collapsed one (it's a water-air face).
+                    # If the face is collapsed, then all vertices are collided and
+                    # num_collided = 3.
+                    if num_collided != 3:
+                        face_normals[f] = f.normal
+                        face_areas[f] = f.calc_area()
+                    #
+                    # # Exit once we have found the three faces.
+                    # if len(face_areas) == 3:
+                    #     break
+
+                # NOTE: THIS MUST HOLD FOR ALL VERTICES ON THE CONTACT LINE.
+                if len(face_areas) == 3:
+                    # Special logic for contact line vertices.
+
+                    # Calculate area-weighted surface normal.
+                    n_l = mathutils.Vector((0.0, 0.0, 0.0))
+                    total_area = sum(face_areas.values())
+                    for f in face_areas:
+                        n_l += face_normals[f] * (face_areas[f] / total_area)
+
+                    # Calculate projection of surface normal onto the plane.
+                    n_p = n_l - n_l.dot(plane_normal) * plane_normal
+
+                    # Calculate the bounding force, applied to the contact vertex.
+                    f_bound = 0
+                    theta = math.degrees(angle(n_l, plane_normal))
+                    if theta > RECEDING_ANGLE and theta < ADVANCING_ANGLE:
+                        f_bound = 0
+                    elif theta < RECEDING_ANGLE:
+                        f_bound = ALPHA * (theta - RECEDING_ANGLE) * n_p / (n_p.magnitude ** 2)
+                    elif theta > ADVANCING_ANGLE:
+                        f_bound = ALPHA * (theta - ADVANCING_ANGLE) * n_p / (n_p.magnitude ** 2)
+
+                    # Change position to match force bound if needed.
+                    accel = vel / dt
+                    if accel * MASS > f_bound:
+                        bound_vel = f_bound / MASS * dt
+                        x_new = x_old + (bound_vel - vel_old) * dt
+                        vertex_info[v] = [vel_old, bound_vel, x_old, x_new]
+
+            for v in bm.verts:
+                vel_old, vel, x_old, x_new = vertex_info[v]
+                insert_keyframe(curves_dict[v.index], i, x_new)
+                bm.to_mesh(mesh)
+
 
 class SurfacePlane:
     def __init__(self, friction):
