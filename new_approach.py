@@ -19,9 +19,9 @@ ADVANCING_ANGLE = 90
 RECEDING_ANGLE = 30
 MASS = 1.0
 ALPHA = 1.0
-FLOW_COEFFICIENT = 0.2
+FLOW_COEFFICIENT = 1.0
 MU = 0.4
-NU = 0.05
+NU = 0.1
 
 def initscene():
     #floor
@@ -90,6 +90,12 @@ def initscene():
 
     # Connect the guys
     links.new(node_glass.outputs[0], node_out.inputs[0])
+
+    # Triangulate meshes.
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED', ngon_method='BEAUTY')
+    bpy.ops.object.mode_set(mode='OBJECT')
 
     droplet = bpy.data.objects['Droplet']
     layer_dict = add_new_attributes(droplet)
@@ -212,6 +218,7 @@ def fall_and_collide(droplets, plane, layer_dict):
         for i in range(frames):
             # Create keyframes for this vertex.
             # fcurves = [action.fcurves.new(data_path % v.index, i) for i in range(3)]
+            all_verts = bm.verts[:]
             for v in bm.verts:
                 if i != 0:
                     _, x_old, _, v_old, coll = keyframe_collisions[i - 1][v]
@@ -220,15 +227,15 @@ def fall_and_collide(droplets, plane, layer_dict):
                     v_old = mathutils.Vector((0.0, 0.0, 0.0))
                     coll = False
 
-                if coll:
-                    x_new = x_old
-                    v_new = v_old
-                    # Save information to insert keyframe later.
-                    if i in keyframe_collisions:
-                        keyframe_collisions[i][v] = (x_old, x_new, v_old, v_new, detected)
-                    else:
-                        keyframe_collisions[i] = {v: (x_old, x_new, v_old, v_new, detected)}
-                    continue
+                # if coll:
+                #     x_new = x_old
+                #     v_new = v_old
+                #     # Save information to insert keyframe later.
+                #     if i in keyframe_collisions:
+                #         keyframe_collisions[i][v] = (x_old, x_new, v_old, v_new, detected)
+                #     else:
+                #         keyframe_collisions[i] = {v: (x_old, x_new, v_old, v_new, detected)}
+                #     continue
 
                 v_new = v_old + GRAVITY * dt
                 x_new = x_old + v_new * dt
@@ -240,13 +247,14 @@ def fall_and_collide(droplets, plane, layer_dict):
                 #     co_kf = co_kf - plane_normal * d
                     #return True
                 if detected:
+                    all_verts.remove(v)
                     v[collided] = True
 
                     x_new = surface_point
-                    v_s = (x_new - x_old) / dt
+                    # v_s = (x_new - x_old) / dt
 
                     # # Update velocity (inelastic method).
-                    v_old = v_old - (v_old - v_s).dot(plane_normal) * plane_normal
+                    # v_old = v_old - (v_old - v_s).dot(plane_normal) * plane_normal
 
                     # Apply friction force.
                     if l1_norm(v_old) < FRICTION_COEFF:
@@ -257,8 +265,8 @@ def fall_and_collide(droplets, plane, layer_dict):
                     # Perform position update.
                     x_new = x_new + (v_new - v_old) * dt
 
-                    # # Viscosity update.
-                    # v_new = (1 - MU * dt) * v_old + NU * v_old
+                    # Viscosity update.
+                    v_new = (1 - MU * dt) * v_old + NU * v_old
 
                 # Save information to insert keyframe later.
                 if i in keyframe_collisions:
@@ -272,14 +280,14 @@ def fall_and_collide(droplets, plane, layer_dict):
 
             # Step 4.2
             # Calculate mean curvature flow.
-            bmesh.ops.smooth_laplacian_vert(bm, verts=bm.verts, lambda_factor=0.02, lambda_border=0.0, preserve_volume=True)
+            bmesh.ops.smooth_laplacian_vert(bm, verts=bm.verts, lambda_factor=5, lambda_border=0, preserve_volume=True)
             # num_vertices = len(bm.verts)
             #
             # # Create identity matrix.
             # identity = np.identity(num_vertices)
             #
             # # Create lumped mass matrix.
-            # lumped_mass_matrix = np.identity(num_vertices)
+            # lumped_mass_matrix = np.identity(num_vertices) * 3
             #
             # # Create old position matrix.
             # X_old = np.zeros((num_vertices, 3))
@@ -302,12 +310,14 @@ def fall_and_collide(droplets, plane, layer_dict):
             #         same_faces = [f for f in neighbor.link_faces if f in v.link_faces]
             #         angles = []
             #         for f in same_faces:
+            #             print(list(f.verts))
+            #             print(len(f.loops))
             #             for corner in f.loops:
             #                 if corner.vert != neighbor and corner.vert != v:
             #                     angles.append(corner.calc_angle())
             #         alpha_ij = angles[0]
             #         beta_ij = angles[1]
-            #         sum_angles = 1.0 / math.tan(alpha_ij) + 1.0 / math.tan(beta_ij)
+            #         sum_angles = 1.0 / (math.tan(alpha_ij) + 1e-10) + 1.0 / (math.tan(beta_ij) + 1e-10)
             #         res = -0.5 * sum_angles
             #         sum_res += res
             #
@@ -319,7 +329,7 @@ def fall_and_collide(droplets, plane, layer_dict):
             #         lap_bel_matrix[curr_vert_index, curr_vert_index] = -sum_res
             #
             # # Solve for new vertex positions.
-            # multiplier = identity + FLOW_COEFFICIENT * dt * lap_bel_matrix
+            # multiplier = identity + FLOW_COEFFICIENT * dt * np.linalg.inv(lumped_mass_matrix) * lap_bel_matrix
             # X_new = np.dot(np.linalg.inv(multiplier), X_old)
             #
             # for ind in range(X_new.shape[0]):
@@ -333,8 +343,8 @@ def fall_and_collide(droplets, plane, layer_dict):
             #     keyframe_collisions[i][v] = x_old, x_new, v_old, v_new, detected
             #
             #     v.co = x_new
-
-            bm.to_mesh(mesh)
+            #
+            # bm.to_mesh(mesh)
 
             # Step 4.3
             # Check for contact vertices.
