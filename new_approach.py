@@ -266,13 +266,13 @@ def fall_and_collide(droplets, plane, layer_dict):
                 else:
                     keyframe_collisions[i] = {v: (x_old, x_new, v_old, v_new, detected)}
 
-            #     v.co = x_new
-            #
-            # bm.to_mesh(mesh)
+                v.co = x_new
+
+            bm.to_mesh(mesh)
 
             # Step 4.2
             # Calculate mean curvature flow.
-            # bmesh.ops.smooth_laplacian_vert(bm, verts=bm.verts, lambda_factor=0.2, lambda_border=0.0, preserve_volume=True)
+            bmesh.ops.smooth_laplacian_vert(bm, verts=bm.verts, lambda_factor=0.02, lambda_border=0.0, preserve_volume=True)
             # num_vertices = len(bm.verts)
             #
             # # Create identity matrix.
@@ -289,7 +289,7 @@ def fall_and_collide(droplets, plane, layer_dict):
             # for ind in range(len(bm.verts)):
             #     index_map[bm.verts[ind]] = ind
             #     inv_index_map[ind] = bm.verts[ind]
-            #     X_old[ind] = keyframe_collisions[i][bm.verts[ind]][0]
+            #     X_old[ind] = keyframe_collisions[i][bm.verts[ind]][1]
             #
             # # Create Laplacian-Beltrami matrix.
             # lap_bel_matrix = np.zeros((num_vertices, num_vertices))
@@ -319,7 +319,7 @@ def fall_and_collide(droplets, plane, layer_dict):
             #         lap_bel_matrix[curr_vert_index, curr_vert_index] = -sum_res
             #
             # # Solve for new vertex positions.
-            # multiplier = identity + FLOW_COEFFICIENT * dt * np.dot(np.linalg.inv(lumped_mass_matrix), lap_bel_matrix)
+            # multiplier = identity + FLOW_COEFFICIENT * dt * lap_bel_matrix
             # X_new = np.dot(np.linalg.inv(multiplier), X_old)
             #
             # for ind in range(X_new.shape[0]):
@@ -327,77 +327,82 @@ def fall_and_collide(droplets, plane, layer_dict):
             #     x_old, x_new, v_old, v_new, detected = keyframe_collisions[i][v]
             #     v_old = v_new
             #     updated_position = X_new[ind]
+            #     x_old = x_new
             #     x_new = mathutils.Vector((updated_position[0], updated_position[1], updated_position[2]))
             #     v_new = v_old + (x_new - x_old) / dt
             #     keyframe_collisions[i][v] = x_old, x_new, v_old, v_new, detected
-
-            # # Step 4.3
-            # # Check for contact vertices.
-            # for v in bm.verts:
-            #     x_old, x_new, v_old, v_new, detected = keyframe_collisions[i][v]
-            #
-            #     if detected:
-            #         face_areas = {}
-            #         face_normals = {}
-            #         for f in v.link_faces:
-            #             num_collided = 0
-            #
-            #             # Check that other vertices are not collided.
-            #             for v_other in f.verts:
-            #                 _, _, _, _, other_collided = keyframe_collisions[i][v_other]
-            #                 if other_collided:
-            #                     num_collided += 1
-            #
-            #             # Make sure the face is not a collapsed one (it's a water-air face).
-            #             # If the face is collapsed, then all vertices are collided and
-            #             # num_collided = 3.
-            #             if num_collided != 3:
-            #                 face_normals[f] = f.normal
-            #                 face_areas[f] = f.calc_area()
-            #             #
-            #             # # Exit once we have found the three faces.
-            #             # if len(face_areas) == 3:
-            #             #     break
-            #
-            #         # NOTE: THIS MUST HOLD FOR ALL VERTICES ON THE CONTACT LINE.
-            #         if len(face_areas) == 3:
-            #             # Special logic for contact line vertices.
-            #
-            #             # Calculate area-weighted surface normal.
-            #             n_l = mathutils.Vector((0.0, 0.0, 0.0))
-            #             total_area = sum(face_areas.values())
-            #             for f in face_areas:
-            #                 n_l += face_normals[f] * (face_areas[f] / total_area)
-            #
-            #             # Calculate projection of surface normal onto the plane.
-            #             n_p = n_l - n_l.dot(plane_normal) * plane_normal
-            #
-            #             # Calculate the bounding force, applied to the contact vertex.
-            #             f_bound = 0
-            #             theta = math.degrees(angle(n_l, plane_normal))
-            #             if theta > RECEDING_ANGLE and theta < ADVANCING_ANGLE:
-            #                 f_bound = 0
-            #             elif theta < RECEDING_ANGLE:
-            #                 f_bound = ALPHA * (theta - RECEDING_ANGLE) * n_p / (n_p.magnitude ** 2)
-            #                 end = True
-            #             elif theta > ADVANCING_ANGLE:
-            #                 f_bound = ALPHA * (theta - ADVANCING_ANGLE) * n_p / (n_p.magnitude ** 2)
-            #                 end = True
-            #
-            #             if end:
-            #                 break
-            #
-            #             # Change position to match force bound if needed.
-            #             accel = v_new / dt
-            #             if accel * MASS > f_bound:
-            #                 bound_vel = f_bound / MASS * dt
-            #                 v_old = v_new
-            #                 v_new = bound_vel
-            #                 x_new = x_old + (bound_vel - v_old) * dt
             #
             #     v.co = x_new
-            #     bm.to_mesh(mesh)
-            #     keyframe_collisions[i][v] = (x_old, x_new, v_old, v_new, detected)
+
+            bm.to_mesh(mesh)
+
+            # Step 4.3
+            # Check for contact vertices.
+            for v in bm.verts:
+                x_old, x_new, v_old, v_new, detected = keyframe_collisions[i][v]
+
+                if detected:
+                    face_areas = {}
+                    face_normals = {}
+                    for f in v.link_faces:
+                        num_collided = 0
+
+                        # Check that other vertices are not collided.
+                        for v_other in f.verts:
+                            _, _, _, _, other_collided = keyframe_collisions[i][v_other]
+                            if other_collided:
+                                num_collided += 1
+
+                        # Make sure the face is not a collapsed one (it's a water-air face).
+                        # If the face is collapsed, then all vertices are collided and
+                        # num_collided = 3.
+                        if num_collided != 3:
+                            face_normals[f] = f.normal
+                            face_areas[f] = f.calc_area()
+                        #
+                        # # Exit once we have found the three faces.
+                        # if len(face_areas) == 3:
+                        #     break
+
+                    # NOTE: THIS MUST HOLD FOR ALL VERTICES ON THE CONTACT LINE.
+                    if len(face_areas) == 3:
+                        # Special logic for contact line vertices.
+
+                        # Calculate area-weighted surface normal.
+                        n_l = mathutils.Vector((0.0, 0.0, 0.0))
+                        total_area = sum(face_areas.values())
+                        for f in face_areas:
+                            n_l += face_normals[f] * (face_areas[f] / total_area)
+
+                        # Calculate projection of surface normal onto the plane.
+                        n_p = n_l - n_l.dot(plane_normal) * plane_normal
+
+                        # Calculate the bounding force, applied to the contact vertex.
+                        f_bound = 0
+                        theta = math.degrees(angle(n_l, plane_normal))
+                        if theta > RECEDING_ANGLE and theta < ADVANCING_ANGLE:
+                            f_bound = 0
+                        elif theta < RECEDING_ANGLE:
+                            f_bound = ALPHA * (theta - RECEDING_ANGLE) * n_p / (n_p.magnitude ** 2)
+                            end = True
+                        elif theta > ADVANCING_ANGLE:
+                            f_bound = ALPHA * (theta - ADVANCING_ANGLE) * n_p / (n_p.magnitude ** 2)
+                            end = True
+
+                        if end:
+                            break
+
+                        # Change position to match force bound if needed.
+                        accel = v_new / dt
+                        if accel * MASS > f_bound:
+                            bound_vel = f_bound / MASS * dt
+                            v_old = v_new
+                            v_new = bound_vel
+                            x_new = x_old + (bound_vel - v_old) * dt
+
+                v.co = x_new
+                bm.to_mesh(mesh)
+                keyframe_collisions[i][v] = (x_old, x_new, v_old, v_new, detected)
 
         # Step 4.3
 
