@@ -181,6 +181,7 @@ def fall_and_collide(droplets, plane, layer_dict):
         data_path = "vertices[%d].co"
         dt = 0.01
         frames = 100
+        volume = bm.calc_volume()
 
         # Iterate over all vertices in this droplet's mesh and change their positions
         # based on external forces.
@@ -189,6 +190,7 @@ def fall_and_collide(droplets, plane, layer_dict):
         for i in range(frames):
             # Step 4.1
             collided_vertices = []
+            old_volume = volume
             for v in bm.verts:
                 # Create keyframes for this vertex.
                 co_kf = v.co
@@ -266,10 +268,25 @@ def fall_and_collide(droplets, plane, layer_dict):
                         x_new = x_old + (bound_vel - vel_old) * dt
                         vertex_info[v] = [vel_old, bound_vel, x_old, x_new]
 
+            ## VOLUME CORRECTION CODE
             for v in bm.verts:
                 vel_old, vel, x_old, x_new = vertex_info[v]
-                insert_keyframe(curves_dict[v.index], i, x_new)
+                v.co = x_new
                 bm.to_mesh(mesh)
+
+            volume = bm.calc_volume()            
+            area = sum(f.calc_area() for f in bm.faces)
+            if area == 0:
+                d = 0
+            else:
+                d = (volume - old_volume) / area
+            
+            # FINAL VOLUME CORRECTION CHANGES + KEYFRAMING
+            for v in bm.verts:
+                vel_old, vel, x_old, x_new = vertex_info[v]
+                x_new = x_new - d * v.normal
+                vertex_info[v] = [vel_old, vel, x_old, x_new]
+                insert_keyframe(curves_dict[v.index], i, x_new)
 
 
 class SurfacePlane:
