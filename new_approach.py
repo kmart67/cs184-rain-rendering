@@ -436,9 +436,8 @@ def fall_and_collide(droplets, plane, layer_dict):
                     accel = v_new / dt
                     if accel * MASS > f_bound:
                         bound_vel = f_bound / MASS * dt
-                        # v_old = v_new
-                        # x_new = x_old + (bound_vel - v_old) * dt
-                        # v_new = bound_vel
+                        x_new = x_old + bound_vel * dt
+                        v_new = v_old + (x_new - x_old) / dt
 
                 vertex_info[v] = (v_old, v_new, x_old, x_new)
 
