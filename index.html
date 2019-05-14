@@ -4,70 +4,135 @@
 
 	<title>Water-Drop Simulation</title>
 
+
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+
 	<link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,500" rel="stylesheet">
 	<link rel="stylesheet" href="css/main.css">
-	</head>
-	<body>
-	<div>
-			<h1>CS 184: Computer Graphics and Imaging, Spring 2019<br>
-			<span class="sp-1">Real-time Water-Drop Simulation</span></h1>
+</head>
+
+<body>
+	<!-- Navbar -->
+	<nav class="navbar navbar-default navbar-fixed-top">
+	  <div class="container-fluid">
+	    <!-- Brand and toggle get grouped for better mobile display -->
+	    <div class="navbar-header">
+	      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+	        <span class="sr-only">Toggle navigation</span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	      </button>
+	      <a class="navbar-brand" href="#">CS 184: Realistic Water Droplet Simulation</a>
+	    </div>
+
+	    <!-- Collect the nav links, forms, and other content for toggling -->
+	    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="#abstract">Abstract</a></li>
+	        <li class="dropdown">
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Approach <span class="caret"></span></a>
+	          <ul class="dropdown-menu">
+							<li id="technical-dropdown"><a href="#technical-approach">Technical Approach</a></li>
+								<li class="deform-op">
+									<a href="#external-forces" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										External Forces
+									</a>
+								</li>
+								<li class="deform-op">
+									<a href="#mean-curvature-flow" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										Mean Curvature Flow
+									</a>
+								</li>
+								<li class="deform-op">
+									<a href="#contact-angle-operator" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										Contact Angle Operator
+									</a>
+								</li>
+								<li class="deform-op">
+									<a href="#volume-correction" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										Volume Correction
+									</a>
+								</li>
+	            <li role="separator" class="divider"></li>
+	            <li><a href="#problems">Problems</a></li>
+	            <li role="separator" class="divider"></li>
+	            <li><a href="#lessons-learned">Lessons Learned</a></li>
+	          </ul>
+	        </li>
+					<li><a href="#results">Results</a></li>
+					<li><a href="#references">References</a></li>
+					<li><a href="#contributions">Team Contributions</a></li>
+      </ul>
+	    </div><!-- /.navbar-collapse -->
+	  </div><!-- /.container-fluid -->
+	</nav>
+
+	<div class="container">
+
+		<!-- Header -->
+		<h1>CS 184: Computer Graphics and Imaging, Spring 2019<br>
+			<span class="sp-1">Realistic Water Droplet Simulation</span></h1>
 			<h3>By Varsha Venkat, Jessica Yeh, and Karina Martinez</h3>
 
-				<h2>Milestone Status</h2>
-				<p>After receiving the feedback from our original <a href="proposal.html">project proposal</a>, our
-          team has pivoted from our original project idea to simulating real-time
-          water-drop animations in order to ensure we have a more tangible final
-          project that nails down our ultimate goals of this project. By the final
-          deliverable, we hope to implement:</p>
-          <ol>
-            <li>Deformation operators that will evolve the water droplets over
-              time based on surface tension and varying hydrophilic and hydrophobic
-              behavior effects based on solid surface materials and contact angles.</li>
-            <li>Mesh operators that will ultimately determine how water droplets interact
-              with each other by performing mesh splitting and collisions for specific scenes we are rendering.</li>
-          </ol>
-        <p>
-          <br>
-          After defining all these operators, we will then be able to apply them over
-          various scenes to demonstrate water-droplet and surface interactions.
-          <br><br>
-          In the following days, we then moved on to researching what rendering pipeline
-          will be the most efficient for our project - ultimately deciding on using
-          the Blender Python API to write scripts that will define our final water-droplet
-          animation behaviors. We all then split up tasks to complete varying parts
-          of our project, where Jessica worked on implementing a deformation operator
-          based on external forces and applying mesh operations that allow the
-          individual vertices in the water droplet to move, Varsha worked on
-          gravity-like effects on water droplets to animate falling water droplets
-          as well as collisions of water-drop vertices against planes, and Karina
-          worked on creating script that initializes the Cornell box scene we will
-          be using in our final deliverable when implementing water-surface interactions
-          as well as creating the water material on Blender for our water droplets.
-          <br><br>
-          The following video shows the progress we have made so far with our real-time
-					water-drop animation:
-				</p>
+		<!-- Abstract -->
+		<a class="anchor" id="abstract"></a>
+		<h2>Abstract</h2>
 
-					<div align="middle">
-						<iframe width="560" height="315" src="https://www.youtube.com/embed/iSIFFzVfnqQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-					</div>
+			<p>
+				In our project, we simulated small-scale water phenomena like falling water droplets using a Lagrangian deformable surface model. Our mesh representation is more memory and runtime-efficient than traditional water droplet simulations, which rely on a volumetric approach to modeling motion. We used the Blender Python API to model vertex movement over time and other mesh operations
+			</p>
+
+		<!-- Technical Approach -->
+		<a class="anchor" id="technical-approach"></a>
+		<h2>Technical Approach</h2>
+
+			<a class="anchor" id="external-forces"></a>
+			<h3 style="text-align: left;">Operator 1: External Forces</h3>
 
 				<p>
-					You can also view the slides <a href="https://docs.google.com/presentation/d/1zPWnIbK43R0BBk8iFuALw9IbOIYhWIj8S0sI_IUiUJY/edit?usp=sharing">here</a>.
-					<br><br>
-          Based on our progress so far, we have reframed our weekly schedule to ensure
-          that we will be able to complete our goals by the final due date:</p>
-          <ol>
-            <li>Week of April 29: complete Milestone Deliverable and continue working
-              on deformation operators (external forces, mean curvature flow, contact
-              angle, and volume correction)</li>
-            <li>Week of May 6: complete mesh operators (mesh splitting and collisions),
-              generate multiple scenes that demonstrate varying interactions between water
-              droplets and surfaces, and complete our project poster for presentations on May 10th.</li>
-            <li>Week of May 13: debug our scripts to ensure our model is working as expected, complete final deliverables.</li>
-          </ol>
+					The first deformation operator involves applying external forces to each water droplet. External forces are used to perform preliminary vertex positions for each vertex in the droplet mesh. To simplify our model, we only consider the force of gravity, friction, and viscosity (through a damping force) for this part.
 				</p>
-				<br><br><br><br>
+
+				<p>
+					The external forces operator can be broken into four steps: applying gravitational force, handling surface collisions, applying friction, and applying a damping force. The operator is iteratively applied to each vertex in the droplet mesh.
+				</p>
+
+				<h4>Step 1: Gravity</h4>
+
+					<p>
+						We represent gravity as a global constant (vector) in our code, and use this vector in conjunction with our timestep to update each vertex’s velocity and position vectors.
+					<p>
+
+					<p>
+						We assume that the vertex under operation has a current velocity of <code><b>v<sub>i</sub><sup>old</sup></b></code>. If this is the first frame in the animation, <code><b>v<sub>i</sub><sup>old</sup></b></code> defaults to the <code><b>0</b></code> vector; otherwise, we understand <code><b>v<sub>i</sub><sup>old</sup></b></code> to be the velocity after applying all deformation operators in the previous timestep, at <code>t = i-1</code>. The updated velocity at the vertex, after applying acceleration due to gravity, is then <code><b>v<sub>i</sub><sup>new</sup></b> = <b>v<sub>i</sub><sup>old</sup></b> + <b>g</b> * dt</code>. Note that all our renders use <code>dt = 0.01</code> and <code><b>g</b></code> is a vector with z-coordinate equal to -9.8 (representing that acceleration due to gravity is -9.8 m/s<sup>2</sup>).
+					</p>
+
+					<p>
+						Given that the initial vertex position is denoted by <code><b>x<sub>i</sub><sup>old</sup></b></code>, we also update the vertex position to account for the force due to gravity using the Forward Euler method. The new position is given by <code><b>x<sub>i</sub><sup>new</sup></b> = <b>x<sub>i</sub><sup>old</sup></b> + <b>v<sub>i</sub><sup>new</sup></b> * dt</code>, where <code><b>v<sub>i</sub><sup>new</sup></b></code> is defined as above.
+					</p>
+
+				<h4>Step 2: Collision with Surface</h4>
+
+					<p>
+						Once we have applied the force due to gravity, we handle vertex collisions with the surface. We do not want the droplet to fall below the surface of the collision object, so we project the new vertex position to the closest point on the object’s surface. We then update the velocity at the vertex accordingly, via an inelastic update.
+					</p>
+
+					<p>
+						We check for vertex-surface collisions as we did in Project 4, by checking whether the old vertex position and new vertex position lie on opposite sides of the surface. If a collision occurs, we calculate the distance from the new vertex position to the closest surface point and shift the new vertex position by that distance, along the surface normal. Assuming that <code>d</code> represents the absolute distance from the new vertex position to the surface, the corrected vertex position is given by <code><b>x<sub>i</sub><sup>corrected</sup></b> = <b>x<sub>i</sub><sup>new</sup></b> + <b>surface_normal</b> * d</code>. We then set <code><b>x<sub>i</sub><sup>new</sup></b> = <b>x<sub>i</sub><sup>corrected</sup></b></code>.
+					</p>
+
+
 	</div>
-	</body>
-</html>
