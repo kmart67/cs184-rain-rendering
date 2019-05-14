@@ -82,7 +82,16 @@
 				<h4>Step 1: Gravity</h4>
 
 					<p>
-						We assume that the vertex under operation has a current velocity of <code>v<sub>i</sub><sup>old</sup></code>. If this is the first frame in the animation, <code>v<sub>i</sub><sup>old</sup></code> defaults to <code><b>0</b></code>; otherwise, we understand <code>v<sub>i</sub><sup>old</sup></code> to be the velocity after applying all deformation operators in the previous timestep, at <code>t=i-1</code>. The updated velocity at the vertex, after applying acceleration due to gravity, is then <code>v<sub>i</sub><sup>new</sup> = v<sub>i</sub><sup>old</sup> + g * dt</code>.
+						We represent gravity as a global constant (vector) in our code, and use this vector in conjunction with our timestep to update each vertex’s velocity and position vectors.
+					<p>
+
+					<p>
+						We assume that the vertex under operation has a current velocity of <code><b>v<sub>i</sub><sup>old</sup></b></code>. If this is the first frame in the animation, <code><b>v<sub>i</sub><sup>old</sup></b></code> defaults to the <code><b>0</b></code> vector; otherwise, we understand <code><b>v<sub>i</sub><sup>old</sup></b></code> to be the velocity after applying all deformation operators in the previous timestep, at <code>t = i-1</code>. The updated velocity at the vertex, after applying acceleration due to gravity, is then <code><b>v<sub>i</sub><sup>new</sup></b> = <b>v<sub>i</sub><sup>old</sup></b> + <b>g</b> * dt</code>. Note that all our renders use <code>dt = 0.01</code> and <code><b>g</b></code> is a vector with z-coordinate equal to -9.8 (representing that acceleration due to gravity is -9.8 m/s<sup>2</sup>).
 					</p>
+
+					<p>
+						Given that the initial vertex position is denoted by <code><b>x<sub>i</sub><sup>old</sup></b></code>, we also update the vertex position to account for the force due to gravity. The new position is given by <code><b>x<sub>i</sub><sup>new</sup></b> = <b>x<sub>i</sub><sup>old</sup></b> + <b>v<sub>i</sub><sup>new</sup></b> * dt</code>, where <code><b>v<sub>i</sub><sup>new</sup></b></code> is defined as above.
+					</p>
+
 
 	</div>
