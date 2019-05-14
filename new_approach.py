@@ -421,7 +421,7 @@ def fall_and_collide(droplets, plane, layer_dict):
                     f_bound = 0
                     theta = math.degrees(angle(n_l, plane_normal))
                     print(theta)
-                    if theta > RECEDING_ANGLE and theta < ADVANCING_ANGLE:
+                    if theta >= RECEDING_ANGLE and theta <= ADVANCING_ANGLE:
                         f_bound = 0
                         end = True
                     elif theta < RECEDING_ANGLE:
@@ -436,9 +436,9 @@ def fall_and_collide(droplets, plane, layer_dict):
                     accel = v_new / dt
                     if accel * MASS > f_bound:
                         bound_vel = f_bound / MASS * dt
-                        v_old = v_new
-                        x_new = x_old + (bound_vel - v_old) * dt
-                        v_new = bound_vel
+                        # v_old = v_new
+                        # x_new = x_old + (bound_vel - v_old) * dt
+                        # v_new = bound_vel
 
                 vertex_info[v] = (v_old, v_new, x_old, x_new)
 
