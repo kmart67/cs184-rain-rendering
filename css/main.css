@@ -11,7 +11,7 @@ h2 {
   font-weight: 300;
   font-size: 40px;
   text-align: center;
-  margin-top: 100px;
+  margin-top: 50px;
 }
 
 h3 {
@@ -21,9 +21,24 @@ h3 {
   text-align: center;
 }
 
-div {
-  margin: 100px;
+h4 {
+  font-family: 'Poppins', sans-serif;
+  text-align: left;
+  margin-top: 20px;
 }
+
+code {
+  font-family: courier;
+  padding: 0.2em;
+  margin: 0;
+  background-color: rgba(0,0,0,0.04);
+  border-radius: 3px;
+  color: #003366;
+}
+
+/* div {
+  margin: 100px;
+} */
 
 p {
   font-family: 'Poppins', sans-serif;

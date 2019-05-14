@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<title>Water-Drop Simulation</title>
+
+
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+
+	<link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,500" rel="stylesheet">
+	<link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+	<!-- Navbar -->
+	<nav class="navbar navbar-default navbar-fixed-top">
+	  <div class="container-fluid">
+	    <!-- Brand and toggle get grouped for better mobile display -->
+	    <div class="navbar-header">
+	      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+	        <span class="sr-only">Toggle navigation</span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	      </button>
+	      <a class="navbar-brand" href="#">CS 184: Realistic Water Droplet Simulation</a>
+	    </div>
+
+	    <!-- Collect the nav links, forms, and other content for toggling -->
+	    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				<ul class="nav navbar-nav navbar-right">
+        <li><a href="#abstract">Abstract</a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="#">Action</a></li>
+            <li><a href="#">Another action</a></li>
+            <li><a href="#">Something else here</a></li>
+            <li role="separator" class="divider"></li>
+            <li><a href="#">Separated link</a></li>
+          </ul>
+        </li>
+      </ul>
+	    </div><!-- /.navbar-collapse -->
+	  </div><!-- /.container-fluid -->
+	</nav>
+
+	<div class="container">
+
+		<!-- Header -->
+		<h1>CS 184: Computer Graphics and Imaging, Spring 2019<br>
+			<span class="sp-1">Realistic Water Droplet Simulation</span></h1>
+			<h3>By Varsha Venkat, Jessica Yeh, and Karina Martinez</h3>
+
+		<!-- Abstract -->
+		<h2 id="abstract">Abstract</h2>
+
+			<p>
+				In our project, we simulated small-scale water phenomena like falling water droplets using a Lagrangian deformable surface model. Our mesh representation is more memory and runtime-efficient than traditional water droplet simulations, which rely on a volumetric approach to modeling motion. We used the Blender Python API to model vertex movement over time and other mesh operations
+			</p>
+
+		<!-- Technical Approach -->
+		<h2 id="technical-approach">Technical Approach</h2>
+
+			<h3 style="text-align: left;">Operator 1: External Forces</h3>
+
+				<p>
+					The first deformation operator involves applying external forces to each water droplet. External forces are used to perform preliminary vertex positions for each vertex in the droplet mesh. To simplify our model, we only consider the force of gravity, friction, and viscosity (through a damping force) for this part.
+				</p>
+
+				<p>
+					The external forces operator can be broken into four steps: applying gravitational force, handling surface collisions, applying friction, and applying a damping force. The operator is iteratively applied to each vertex in the droplet mesh.
+				</p>
+
+				<h4>Step 1: Gravity</h4>
+
+					<p>
+						We assume that the vertex under operation has a current velocity of <code>v<sub>i</sub><sup>old</sup></code>. If this is the first frame in the animation, <code>v<sub>i</sub><sup>old</sup></code> defaults to <code><b>0</b></code>; otherwise, we understand <code>v<sub>i</sub><sup>old</sup></code> to be the velocity after applying all deformation operators in the previous timestep, at <code>t=i-1</code>. The updated velocity at the vertex, after applying acceleration due to gravity, is then <code>v<sub>i</sub><sup>new</sup> = v<sub>i</sub><sup>old</sup> + g * dt</code>.
+					</p>
+
+	</div>
