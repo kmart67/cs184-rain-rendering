@@ -21,6 +21,21 @@ h3 {
   text-align: center;
 }
 
+h4 {
+  font-family: 'Poppins', sans-serif;
+  text-align: left;
+  margin-top: 20px;
+}
+
+code {
+  font-family: courier;
+  padding: 0.2em;
+  margin: 0;
+  background-color: rgba(0,0,0,0.04);
+  border-radius: 3px;
+  color: #003366;
+}
+
 /* div {
   margin: 100px;
 } */
