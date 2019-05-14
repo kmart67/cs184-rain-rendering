@@ -12,6 +12,7 @@
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
 
 	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
 
 	<link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,500" rel="stylesheet">
@@ -36,17 +37,44 @@
 	    <!-- Collect the nav links, forms, and other content for toggling -->
 	    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 				<ul class="nav navbar-nav navbar-right">
-        <li><a href="#abstract">Abstract</a></li>
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
-          <ul class="dropdown-menu">
-            <li><a href="#">Action</a></li>
-            <li><a href="#">Another action</a></li>
-            <li><a href="#">Something else here</a></li>
-            <li role="separator" class="divider"></li>
-            <li><a href="#">Separated link</a></li>
-          </ul>
-        </li>
+					<li><a href="#abstract">Abstract</a></li>
+	        <li class="dropdown">
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Approach <span class="caret"></span></a>
+	          <ul class="dropdown-menu">
+							<li id="technical-dropdown"><a href="#technical-approach">Technical Approach</a></li>
+								<li class="deform-op">
+									<a href="#external-forces" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										External Forces
+									</a>
+								</li>
+								<li class="deform-op">
+									<a href="#mean-curvature-flow" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										Mean Curvature Flow
+									</a>
+								</li>
+								<li class="deform-op">
+									<a href="#contact-angle-operator" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										Contact Angle Operator
+									</a>
+								</li>
+								<li class="deform-op">
+									<a href="#volume-correction" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										Volume Correction
+									</a>
+								</li>
+	            <li role="separator" class="divider"></li>
+	            <li><a href="#problems">Problems</a></li>
+	            <li role="separator" class="divider"></li>
+	            <li><a href="#lessons-learned">Lessons Learned</a></li>
+	          </ul>
+	        </li>
+					<li><a href="#results">Results</a></li>
+					<li><a href="#references">References</a></li>
+					<li><a href="#contributions">Team Contributions</a></li>
       </ul>
 	    </div><!-- /.navbar-collapse -->
 	  </div><!-- /.container-fluid -->
@@ -60,15 +88,18 @@
 			<h3>By Varsha Venkat, Jessica Yeh, and Karina Martinez</h3>
 
 		<!-- Abstract -->
-		<h2 id="abstract">Abstract</h2>
+		<a class="anchor" id="abstract"></a>
+		<h2>Abstract</h2>
 
 			<p>
 				In our project, we simulated small-scale water phenomena like falling water droplets using a Lagrangian deformable surface model. Our mesh representation is more memory and runtime-efficient than traditional water droplet simulations, which rely on a volumetric approach to modeling motion. We used the Blender Python API to model vertex movement over time and other mesh operations
 			</p>
 
 		<!-- Technical Approach -->
-		<h2 id="technical-approach">Technical Approach</h2>
+		<a class="anchor" id="technical-approach"></a>
+		<h2>Technical Approach</h2>
 
+			<a class="anchor" id="external-forces"></a>
 			<h3 style="text-align: left;">Operator 1: External Forces</h3>
 
 				<p>
@@ -90,7 +121,17 @@
 					</p>
 
 					<p>
-						Given that the initial vertex position is denoted by <code><b>x<sub>i</sub><sup>old</sup></b></code>, we also update the vertex position to account for the force due to gravity. The new position is given by <code><b>x<sub>i</sub><sup>new</sup></b> = <b>x<sub>i</sub><sup>old</sup></b> + <b>v<sub>i</sub><sup>new</sup></b> * dt</code>, where <code><b>v<sub>i</sub><sup>new</sup></b></code> is defined as above.
+						Given that the initial vertex position is denoted by <code><b>x<sub>i</sub><sup>old</sup></b></code>, we also update the vertex position to account for the force due to gravity using the Forward Euler method. The new position is given by <code><b>x<sub>i</sub><sup>new</sup></b> = <b>x<sub>i</sub><sup>old</sup></b> + <b>v<sub>i</sub><sup>new</sup></b> * dt</code>, where <code><b>v<sub>i</sub><sup>new</sup></b></code> is defined as above.
+					</p>
+
+				<h4>Step 2: Collision with Surface</h4>
+
+					<p>
+						Once we have applied the force due to gravity, we handle vertex collisions with the surface. We do not want the droplet to fall below the surface of the collision object, so we project the new vertex position to the closest point on the object’s surface. We then update the velocity at the vertex accordingly, via an inelastic update.
+					</p>
+
+					<p>
+						We check for vertex-surface collisions as we did in Project 4, by checking whether the old vertex position and new vertex position lie on opposite sides of the surface. If a collision occurs, we calculate the distance from the new vertex position to the closest surface point and shift the new vertex position by that distance, along the surface normal. Assuming that <code>d</code> represents the absolute distance from the new vertex position to the surface, the corrected vertex position is given by <code><b>x<sub>i</sub><sup>corrected</sup></b> = <b>x<sub>i</sub><sup>new</sup></b> + <b>surface_normal</b> * d</code>. We then set <code><b>x<sub>i</sub><sup>new</sup></b> = <b>x<sub>i</sub><sup>corrected</sup></b></code>.
 					</p>
 
 
