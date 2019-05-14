@@ -300,65 +300,65 @@ def fall_and_collide(droplets, plane, layer_dict):
             # Step 4.2: Mean Curvature Flow
             # Calculate mean curvature flow.
             # bmesh.ops.smooth_laplacian_vert(bm, verts=all_verts, lambda_factor=5, lambda_border=0, preserve_volume=True)
-            # num_vertices = len(bm.verts)
-            #
-            # # Create identity matrix.
-            # identity = np.identity(num_vertices)
-            #
-            # # Create lumped mass matrix.
-            # lumped_mass_matrix = np.identity(num_vertices) * MASS
-            #
-            # # Create old position matrix.
-            # X_old = np.zeros((num_vertices, 3))
-            # index_map = {}
-            # inv_index_map = {}
-            # bm.verts.ensure_lookup_table()
-            # for ind in range(len(bm.verts)):
-            #     index_map[bm.verts[ind]] = ind
-            #     inv_index_map[ind] = bm.verts[ind]
-            #     X_old[ind] = vertex_info[bm.verts[ind]][3]
-            #
-            # # Create Laplacian-Beltrami matrix.
-            # lap_bel_matrix = np.zeros((num_vertices, num_vertices))
-            # for ind in range(len(bm.verts)):
-            #     v = bm.verts[ind]
-            #     curr_vert_index = index_map[v]
-            #     sum_res = 0.0
-            #     for j in range(len(v.link_edges)):
-            #         edge = v.link_edges[j]
-            #         neighbor = edge.verts[0] if edge.verts[0] != v else edge.verts[1]
-            #         same_faces = [f for f in neighbor.link_faces if f in v.link_faces]
-            #         angles = []
-            #         for f in same_faces:
-            #             for corner in f.loops:
-            #                 if corner.vert != neighbor and corner.vert != v:
-            #                     angles.append(corner.calc_angle())
-            #         alpha_ij = angles[0]
-            #         beta_ij = angles[1]
-            #         sum_angles = 1.0 / (math.tan(alpha_ij) + 1e-10) + 1.0 / (math.tan(beta_ij) + 1e-10)
-            #         res = -0.5 * sum_angles
-            #         sum_res += res
-            #
-            #         # Recall that matrix is symmetric.
-            #         neighbor_vert_index = index_map[neighbor]
-            #         lap_bel_matrix[curr_vert_index, neighbor_vert_index] = res
-            #         lap_bel_matrix[neighbor_vert_index, curr_vert_index] = res
-            #     lap_bel_matrix[curr_vert_index, curr_vert_index] = -sum_res
-            #
-            # assert np.allclose(lap_bel_matrix, lap_bel_matrix.T)
-            #
-            # # Solve for new vertex positions.
-            # multiplier = identity + FLOW_COEFFICIENT * dt * np.dot(np.linalg.inv(lumped_mass_matrix), lap_bel_matrix)
-            # X_new = np.dot(np.linalg.inv(multiplier), X_old)
-            #
-            # for ind in range(X_new.shape[0]):
-            #     v = inv_index_map[ind]
-            #     v_old, v_new, x_old, x_new = vertex_info[v]
-            #     updated_position = X_new[ind]
-            #     x_new = mathutils.Vector((updated_position[0], updated_position[1], updated_position[2]))
-            #     v_new = v_old + (x_new - x_old) / dt
-            #     vertex_info[v] = v_old, v_new, x_old, x_new
-            #
+            num_vertices = len(bm.verts)
+
+            # Create identity matrix.
+            identity = np.identity(num_vertices)
+
+            # Create lumped mass matrix.
+            lumped_mass_matrix = np.identity(num_vertices) * MASS
+
+            # Create old position matrix.
+            X_old = np.zeros((num_vertices, 3))
+            index_map = {}
+            inv_index_map = {}
+            bm.verts.ensure_lookup_table()
+            for ind in range(len(bm.verts)):
+                index_map[bm.verts[ind]] = ind
+                inv_index_map[ind] = bm.verts[ind]
+                X_old[ind] = vertex_info[bm.verts[ind]][3]
+
+            # Create Laplacian-Beltrami matrix.
+            lap_bel_matrix = np.zeros((num_vertices, num_vertices))
+            for ind in range(len(bm.verts)):
+                v = bm.verts[ind]
+                curr_vert_index = index_map[v]
+                sum_res = 0.0
+                for j in range(len(v.link_edges)):
+                    edge = v.link_edges[j]
+                    neighbor = edge.verts[0] if edge.verts[0] != v else edge.verts[1]
+                    same_faces = [f for f in neighbor.link_faces if f in v.link_faces]
+                    angles = []
+                    for f in same_faces:
+                        for corner in f.loops:
+                            if corner.vert != neighbor and corner.vert != v:
+                                angles.append(corner.calc_angle())
+                    alpha_ij = angles[0]
+                    beta_ij = angles[1]
+                    sum_angles = 1.0 / (math.tan(alpha_ij) + 1e-10) + 1.0 / (math.tan(beta_ij) + 1e-10)
+                    res = -0.5 * sum_angles
+                    sum_res += res
+
+                    # Recall that matrix is symmetric.
+                    neighbor_vert_index = index_map[neighbor]
+                    lap_bel_matrix[curr_vert_index, neighbor_vert_index] = res
+                    lap_bel_matrix[neighbor_vert_index, curr_vert_index] = res
+                lap_bel_matrix[curr_vert_index, curr_vert_index] = -sum_res
+
+            assert np.allclose(lap_bel_matrix, lap_bel_matrix.T)
+
+            # Solve for new vertex positions.
+            multiplier = identity + FLOW_COEFFICIENT * dt * np.dot(np.linalg.inv(lumped_mass_matrix), lap_bel_matrix)
+            X_new = np.dot(np.linalg.inv(multiplier), X_old)
+
+            for ind in range(X_new.shape[0]):
+                v = inv_index_map[ind]
+                v_old, v_new, x_old, x_new = vertex_info[v]
+                updated_position = X_new[ind]
+                updated_position = mathutils.Vector((updated_position[0], updated_position[1], updated_position[2]))
+                v_new = v_new + (updated_position - x_new) / dt
+                vertex_info[v] = v_old, v_new, x_old, updated_position
+
             #     v.co = x_new
             #
             # bm.to_mesh(mesh)
@@ -436,6 +436,8 @@ def fall_and_collide(droplets, plane, layer_dict):
                     accel = v_new / dt
                     if accel * MASS > f_bound:
                         bound_vel = f_bound / MASS * dt
+                        # x_old = x_new
+                        # v_old = v_new
                         x_new = x_old + bound_vel * dt
                         v_new = v_old + (x_new - x_old) / dt
 
@@ -445,24 +447,24 @@ def fall_and_collide(droplets, plane, layer_dict):
                 # bm.to_mesh(mesh)
                 # keyframe_collisions[i][v] = (x_old, x_new, v_old, v_new, detected)
 
-            # Step 4.4: Volume Correction
-            for v in bm.verts:
-                v_old, v_new, x_old, x_new = vertex_info[v]
-                v.co = x_new
-                bm.to_mesh(mesh)
-
-            volume = bm.calc_volume()
-            area = sum(f.calc_area() for f in bm.faces)
-            if area == 0:
-                d = 0
-            else:
-                d = (volume - old_volume) / area
+            # # Step 4.4: Volume Correction
+            # for v in bm.verts:
+            #     v_old, v_new, x_old, x_new = vertex_info[v]
+            #     v.co = x_new
+            #     bm.to_mesh(mesh)
+            #
+            # volume = bm.calc_volume()
+            # area = sum(f.calc_area() for f in bm.faces)
+            # if area == 0:
+            #     d = 0
+            # else:
+            #     d = (volume - old_volume) / area
 
             # FINAL VOLUME CORRECTION CHANGES + KEYFRAMING
             for v in bm.verts:
                 v_old, v_new, x_old, x_new = vertex_info[v]
-                x_new = x_new - d * v.normal
-                vertex_info[v] = (v_old, v_new, x_old, x_new)
+                # x_new = x_old - d * v.normal
+                # vertex_info[v] = (v_old, v_new, x_old, x_new)
                 insert_keyframe(curves_dict[v.index], i, x_new)
 
 
