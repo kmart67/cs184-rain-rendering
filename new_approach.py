@@ -18,7 +18,7 @@ FRICTION_COEFF = 0.0001
 GRAVITY = mathutils.Vector((0.0, 0.0, -9.8))
 ADVANCING_ANGLE = 90
 RECEDING_ANGLE = 30
-MASS = 1.0
+MASS = 50
 ALPHA = 1.0
 FLOW_COEFFICIENT = 0.1
 MU = 0.4
@@ -32,8 +32,24 @@ def initscene():
     bpy.context.active_object.data.materials.append(mat)
     bpy.context.object.active_material.diffuse_color = (1, 1, 1)
 
+    addcube(location=(0,0,-1))
+    name = "Cube"
+    bpy.context.active_object.name = name
+    bpy.context.scene.objects.active = bpy.data.objects[name]
+     
+    bpy.ops.object.mode_set(mode='EDIT')
+    obj = bpy.context.edit_object
+    me = obj.data
+    bm = bmesh.from_edit_mesh(me)
+    for v in bm.verts:
+        if v.co[2] < 0:
+            v.co = mathutils.Vector((v.co[0], v.co[1], 0.8))
+        print(v.co[2])
+    bmesh.update_edit_mesh(me, True)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
     #adding camera
-    bpy.ops.object.camera_add(location=(0,3,0), rotation=(math.radians(90), 0, math.radians(180)))
+    bpy.ops.object.camera_add(location=(0,3,0.8), rotation=(math.radians(90), 0, math.radians(180)))
     bpy.context.active_object.name = 'Camera'
     bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
@@ -48,7 +64,7 @@ def initscene():
     # bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
     # add droplet
-    addsphere(location=(0,0,0.3), size=0.05)
+    addsphere(location=(0,0,0.7), size=0.5)
     name = "Droplet1"
     bpy.context.active_object.name = name
     bpy.ops.object.shade_smooth()
@@ -185,6 +201,24 @@ Angle between two vectors
 def angle(v1, v2):
   return math.acos(dot(v1, v2) / (length(v1) * length(v2)))
 
+def cholesky1(A):
+    """
+       Performs a Cholesky decomposition of on symmetric, pos-def A.
+       Returns lower-triangular L (full sized, zeroed above diag)
+    """
+    n = A.shape[0]
+    L = np.zeros_like(A)
+
+    # Perform the Cholesky decomposition
+    for row in range(n):
+        for col in range(row+1):
+            tmp_sum = np.dot(L[row,:col], L[col,:col])
+            if (row == col): # Diagonal elements
+                L[row, col] = math.sqrt(max(A[row,row] - tmp_sum, 0))
+            else:
+                L[row,col] = (1.0 / L[col,col]) * (A[row,col] - tmp_sum)
+    return L
+
 """
 Have the droplet fall for one time frame, and check for collisions between any
 droplet and the rigid body object inputted.
@@ -221,7 +255,7 @@ def fall_and_collide(droplets, plane, layer_dict):
         mesh.animation_data.action = action
         data_path = "vertices[%d].co"
         dt = 0.01
-        frames = 100
+        frames = 250
 
         # Calculate volume of mesh.
         volume = bm.calc_volume()
@@ -349,19 +383,19 @@ def fall_and_collide(droplets, plane, layer_dict):
 
             # Solve for new vertex positions.
             multiplier = identity + FLOW_COEFFICIENT * dt * np.dot(np.linalg.inv(lumped_mass_matrix), lap_bel_matrix)
-            X_new = np.dot(np.linalg.inv(multiplier), X_old)
+            factor = cholesky1(multiplier)
+            y = np.dot(factor.T, X_old)
+            X_new = np.dot(factor, y)
+            #X_new = np.dot(np.linalg.inv(multiplier), X_old)
 
             for ind in range(X_new.shape[0]):
                 v = inv_index_map[ind]
                 v_old, v_new, x_old, x_new = vertex_info[v]
                 updated_position = X_new[ind]
                 updated_position = mathutils.Vector((updated_position[0], updated_position[1], updated_position[2]))
-                v_new = v_new + (updated_position - x_new) / dt
-                vertex_info[v] = v_old, v_new, x_old, updated_position
+                v_next = v_new + (updated_position - x_new) / dt
+                vertex_info[v] = v_new, v_next, x_new, updated_position
 
-            #     v.co = x_new
-            #
-            # bm.to_mesh(mesh)
 
             # Step 4.3: Contact Angle Operator
             for v in collided_vertices:
@@ -395,10 +429,6 @@ def fall_and_collide(droplets, plane, layer_dict):
                     if num_collided < 3:
                         face_normals[f] = f.normal
                         face_areas[f] = f.calc_area()
-                    #
-                    # # Exit once we have found the three faces.
-                    # if len(face_areas) == 3:
-                    #     break
 
                 print(len(face_areas))
 
@@ -436,35 +466,38 @@ def fall_and_collide(droplets, plane, layer_dict):
                     accel = v_new / dt
                     if accel * MASS > f_bound:
                         bound_vel = f_bound / MASS * dt
-                        # x_old = x_new
-                        # v_old = v_new
                         x_new = x_old + bound_vel * dt
                         v_new = v_old + (x_new - x_old) / dt
 
                 vertex_info[v] = (v_old, v_new, x_old, x_new)
 
-                # v.co = x_new
-                # bm.to_mesh(mesh)
-                # keyframe_collisions[i][v] = (x_old, x_new, v_old, v_new, detected)
+            ## VOLUME CORRECTION CODE
+            for v in bm.verts:
+                vel_old, vel, x_old, x_new = vertex_info[v]
+                v.co = x_new
+                bm.to_mesh(mesh)
 
-            # # Step 4.4: Volume Correction
-            # for v in bm.verts:
-            #     v_old, v_new, x_old, x_new = vertex_info[v]
-            #     v.co = x_new
-            #     bm.to_mesh(mesh)
-            #
-            # volume = bm.calc_volume()
-            # area = sum(f.calc_area() for f in bm.faces)
-            # if area == 0:
-            #     d = 0
-            # else:
-            #     d = (volume - old_volume) / area
+            volume = bm.calc_volume()
+            area = sum(f.calc_area() for f in bm.faces)
+            if area == 0:
+                d = 0
+            else:
+                d = (volume - old_volume) / area
+
+            # 5.1: Mesh Optimization
+            # to_collapse = []
+            # for e in bm.edges:
+            #     length = e.calc_length()
+            #     if length < 0.01:
+            #         to_collapse.append(e)
+            # bmesh.ops.collapse(bm, edges=to_collapse, uvs=True)
+            # bm.to_mesh(mesh)
 
             # FINAL VOLUME CORRECTION CHANGES + KEYFRAMING
             for v in bm.verts:
-                v_old, v_new, x_old, x_new = vertex_info[v]
-                # x_new = x_old - d * v.normal
-                # vertex_info[v] = (v_old, v_new, x_old, x_new)
+                vel_old, vel, x_old, x_new = vertex_info[v]
+                x_new = x_new - d * v.normal
+                vertex_info[v] = [vel_old, vel, x_old, x_new]
                 insert_keyframe(curves_dict[v.index], i, x_new)
 
 
