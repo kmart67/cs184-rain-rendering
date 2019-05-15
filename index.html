@@ -100,6 +100,15 @@
 		<a class="anchor" id="technical-approach"></a>
 		<h2>Technical Approach</h2>
 
+			<p>
+				Our deformable surface model is based on the assumption that the state of a water droplet is dominated by its boundary surface and can be represented through a series of deformation operators (Zhang et al, 2012). The deformation operators consist of: external forces, mean curvature flow, a contact angle operator, and volume correction. The order in which these operators are applied is shown in Figure 1. Together, these four operators update the velocity and position of each vertex in our water droplet mesh over time. Since our model only considers the boundary surface when deforming the mesh, we were able to greatly simplify our problem into a more efficient process.
+			</p>
+
+			<div align="middle" style="padding-bottom: 1em;">
+				<img src="./images/deformation_operators.png" width="650px"/>
+				<figcaption align="middle">Figure 1: Sequence of deformation operators.</figcaption>
+			</div>
+
 			<a class="anchor" id="external-forces"></a>
 			<h3 style="text-align: left;">Operator 1: External Forces</h3>
 
@@ -190,9 +199,39 @@
 			<a class="anchor" id="mean-curvature-flow"></a>
 			<h3 style="text-align: left;">Operator 2: Mean Curvature Flow</h3>
 
-			<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
-				<iframe width="560" height="315" src="https://youtube.com/embed/ahd2Df32Ba4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+			<p>
+				In addition to modeling the change in droplet's motion, we want to account for surface tension. This is important for creating a realistic droplet shape even on collision. To model surface tension, we use the mean curvature flow approach as suggested by Sussman et al <a href="#ref-2">[2]</a>.
+			</p>
+
+			<p>
+				We work with discrete values over the triangle mesh for each droplet, so we use a semi-implicit method for mean curvature flow defined by Desbrun et al <a href="#ref-3">[3]</a>. The discrete function is shown below:
+			</p>
+
+			<div align="middle" style="padding-bottom: 1em;">
+				<img src="./images/semi_implicit_method.png" width="300px"/>
 			</div>
+
+			<p>
+				<img src="./images/identity.png" height="15px"/> is an identity matrix with side length equal to the number of vertices in the droplet mesh. <img src="./images/gamma.png" height="18px"/> is the coefficient of curvature flow. <img src="./images/lumped_mass_matrix.png" height="15px"/> is the lumped mass matrix, which represents the droplet's resistance to change in motion. <img src="./images/cotangent_matrix.png" height="15px"/> is a symmetric matrix of cotangent coefficients from the discrete Laplace-Beltrami operator. The cotangent coefficients for two connected vertices apply to the two angles opposite the connecting edge, as shown below in Figure 2.
+			</p>
+
+			<div align="middle" style="padding-bottom: 1em;">
+				<img src="./images/cotangent_diagram.png" width="200px"/>
+				<figcaption align="middle">Figure 2: Diagram of connected vertices <img src="./images/x_i.png" height="18px"/> and <img src="./images/x_j.png" height="18px"/>, with their opposing angles <img src="./images/alpha_j.png" height="15px"/> and <img src="./images/beta_j.png" height="18px"/>.
+			</div>
+
+			<p>
+				We specify the coefficients of <img src="./images/cotangent_matrix.png" height="15px"/> so that <img src="./images/l_ij.png" height="40px"/> and <img src="./images/l_ii.png" height="50px"/> for neighboring vertices i and j.
+			</p>
+
+			<p>
+				In order to solve the earlier matrix equation, we first transform the equation into a symmetric positive definite system by multiplying both sides by <img src="./images/lumped_mass_matrix.png" height="15px"/>. We then use Cholesky linear factorization to decompose the modified matrix multiplier (<img src="./images/multiplier.png" height="22px"/>) into a triangular matrix, <img src="./images/triangular_matrix.png" height="17px"/>. We then solved for the following linear equation: <img src="./images/cholesky_factorization.png" height="25px"/>. This step’s main purpose was to improve our numerical solutions of the updated vertex positions.
+			</p>
+
+
+				<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
+					<iframe width="560" height="315" src="https://youtube.com/embed/ahd2Df32Ba4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+				</div>
 
 			<a class="anchor" id="contact-angle-operator"></a>
 			<h3 style="text-align: left;">Operator 3: Contact Angle Operator</h3>
@@ -206,12 +245,12 @@
 				</p>
 
 				<p>
-					To calculate the contact angle, we find the water-air surface normal <img src="./images/water_air_normal.png" width="25px"/> at a contact vertex O by the area-weighted average of triangle normals of its three neighboring vertices A, B and C that are between water and air (i.e. non-contact vertices). We then approximate the contact angle to be the angle between <img src="./images/water_air_normal.png" width="25px"/> and the surface normal, <img src="./images/surface_normal.png" width="22px"/>. Figure 2 shows a visual representation of this.
+					To calculate the contact angle, we find the water-air surface normal <img src="./images/water_air_normal.png" width="25px"/> at a contact vertex O by the area-weighted average of triangle normals of its three neighboring vertices A, B and C that are between water and air (i.e. non-contact vertices). We then approximate the contact angle to be the angle between <img src="./images/water_air_normal.png" width="25px"/> and the surface normal, <img src="./images/surface_normal.png" width="22px"/>. Figure 3 shows a visual representation of this.
 				</p>
 
 				<div align="middle" style="padding-bottom: 1em;">
 					<img src="./images/contact_line_diagram.png" width="400px"/>
-					<figcaption align="middle">Figure 2: Contact line (shown in red) and relevant faces/normals to contact vertex O.</figcaption>
+					<figcaption align="middle">Figure 3: Contact line (shown in red) and relevant faces/normals to contact vertex O.</figcaption>
 				</div>
 
 				<p>
@@ -285,35 +324,35 @@
 		<a class="anchor" id="results"></a>
 		<h2>Results</h2>
 
-		<br><br>
-		<h3 style="text-align: center;">DROPLETS ON THE SOLID SURFACES WITH DIFFERENT CONTACT ANGLES</h3>
+			<br><br>
+			<h3 style="text-align: center;">DROPLETS ON THE SOLID SURFACES WITH DIFFERENT CONTACT ANGLES</h3>
 
-		<div class="row">
-		  <div class="column">
-		    <img src="./images/final-25.1.png" width="350px"/>
-				<figcaption align="middle">Contact angle: 25.1</figcaption>
-		  </div>
-		  <div class="column">
-		    <img src="./images/final-88.75.png" width="350px"/>
-				<figcaption align="middle">Contact angle: 88.75</figcaption>
-		  </div>
-		  <div class="column">
-				<img src="./images/final-156.55.png" width="350px"/>
-				<figcaption align="middle">Contact angle: 156.55</figcaption>
-		  </div>
-		</div>
+				<div class="row">
+				  <div class="column">
+				    <img src="./images/final-25.1.png" width="350px"/>
+						<figcaption align="middle">Contact angle: 25.1</figcaption>
+				  </div>
+				  <div class="column">
+				    <img src="./images/final-88.75.png" width="350px"/>
+						<figcaption align="middle">Contact angle: 88.75</figcaption>
+				  </div>
+				  <div class="column">
+						<img src="./images/final-156.55.png" width="350px"/>
+						<figcaption align="middle">Contact angle: 156.55</figcaption>
+				  </div>
+				</div>
 
-		<h3 style="text-align: center;">Final Rendering of Water Droplet Falling on the Solid Surface With Contact Angle of 90.</h3>
+			<h3 style="text-align: center;">Final Rendering of Water Droplet Falling on the Solid Surface With Contact Angle of 90.</h3>
 
-		<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
-			<iframe width="560" height="315" src="https://www.youtube.com/embed/cEvWzJXYpOU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-		</div>
+				<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
+					<iframe width="560" height="315" src="https://www.youtube.com/embed/cEvWzJXYpOU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+				</div>
 
-		<h3 style="text-align: center;">Two Water Droplets Falling on a Solid Surface</h3>
+			<h3 style="text-align: center;">Two Water Droplets Falling on a Solid Surface</h3>
 
-		<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
-			<iframe width="560" height="315" src="https://youtube.com/embed/GL5-WCPEnZY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-		</div>
+				<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
+					<iframe width="560" height="315" src="https://youtube.com/embed/GL5-WCPEnZY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+				</div>
 
 		<!-- References -->
 		<a class="anchor" id="references"></a>
@@ -322,6 +361,16 @@
 			<a class="anchor" id="ref-1"></a>
 			<p>
 				[1] Zhang, Yizhong, et al. “A Deformable Surface Model for Real-Time Water Drop Animation.” <i>IEEE Transactions on Visualization and Computer Graphics</i>, vol. 18, no. 8, 2012, pp. 1281–1289., doi:10.1109/tvcg.2011.141.
+			</p>
+
+			<a class="anchor" id="ref-2"></a>
+			<p>
+				[2] M. Sussman and M. Ohta, “A stable and efficient method for treating surface tension in incompressible two-phase flow,” <i>Journal of Scientific Computing</i>, vol. 31, no. 4, pp. 2447–2471, June 2009.
+			</p>
+
+			<a class="anchor" id="ref-3"></a>
+			<p>
+				[3] M. Desbrun, M. Meyer, P. Schroder, and A. H. Barr, “Implicit fairing of irregular meshes using diffusion and curvature flow,” in <i>Proceedings of the 26th annual conference on Computer graphics and interactive techniques (SIGGRAPH ’99)</i>, 1999, pp. 317–324.
 			</p>
 
 		<!-- Team Contributions -->
