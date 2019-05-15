@@ -218,6 +218,11 @@
 					Here, <img src="./images/receding_angle.png" width="20px"> and <img src="./images/advancing_angle.png" width="20px"> are predefined receding and advancing contact angles, <img src="./images/alpha.png" width="18px"> is the magnitude coefficient for the boundary force, and <img src="./images/normal_projection.png" width="25px"> is the projection of <img src="./images/water_air_normal.png" width="25px"> onto the surface. This boundary force influences the contact vertices to aim to minimize the boundary force magnitude by stabilizing on the surface and reach an equilibrium position.
 				</p>
 
+				<p>
+					Once we have the boundary force, we check the current force applied to the vertex against the <img src="./images/f_bound.png" height="23px"/>. If the current force exceeds <img src="./images/f_bound.png" height="23px"/>, we calculate the bounding velocity using Newton’s second law of motion, <img src="./images/newton_law2.png" height="22px"/>, and the fact that <img src="./images/velocity_def.png" height="22px"/>. We then use Forward Euler with the bounding velocity to update the vertex position, and set the new velocity to be the bounding velocity.
+				</p>
+
+
 			<a class="anchor" id="volume-correction"></a>
 			<h3 style="text-align: left;">Operator 4: Volume Correction</h3>
 
