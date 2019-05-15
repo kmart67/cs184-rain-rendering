@@ -47,10 +47,16 @@ a.anchor {
   margin: 100px;
 } */
 
+figcaption {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 200;
+}
+
 p {
   font-family: 'Poppins', sans-serif;
   font-weight: 200;
   font-size: 16px;
+  padding: 0.5em;
 }
 
 .center {

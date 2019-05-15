@@ -117,14 +117,14 @@
 
 						<p>
 							We represent gravity as a global constant (vector) in our code, and use this vector in conjunction with our timestep to update each vertex’s velocity and position vectors.
-						<p>
+						</p>
 
 						<p>
 							We assume that the vertex under operation has a current velocity of <img src="./images/v_old.png" height="25px">. If this is the first frame in the animation, <img src="./images/v_old.png" height="25px"> defaults to the zero vector; otherwise, we understand it to be the velocity after applying all deformation operators in the previous timestep. The updated velocity at the vertex, after applying acceleration due to gravity, is then <img src="./images/gravity_vel_update.png" height="25px"/>. Note that all our renders use <img src="./images/dt.png" width="22px"/> = 0.01 and <img src="./images/gravity.png" width="10px"/> is a vector with z-coordinate equal to -9.8 (representing that acceleration due to gravity is -9.8 m/s<sup>2</sup>).
 						</p>
 
 						<p>
-							Given that the initial vertex position is denoted by <img src="./images/x_old.png" height="25px"/>, we also update the vertex position to account for the force due to gravity using the Forward Euler method. The new position is given by <img src="./images/gravity_forward_euler.png" height="28px"/>, where <img src="./images/v_new.png" height="23px"> is defined as above.
+							Given that the initial vertex position is denoted by <img src="./images/x_old.png" height="25px"/>, we also update the vertex position to account for the force due to gravity using the Forward Euler method. The new position is given by <img src="./images/gravity_forward_euler.png" height="30px"/>, where <img src="./images/v_new.png" height="23px"> is defined as above.
 						</p>
 
 					<h4>Step 2: Surface Collisions</h4>
@@ -152,7 +152,11 @@
 					<h4>Step 3: Friction</h4>
 
 						<p>
-							We now take the collision-corrected vertex positions and apply friction forces based on the surface used. We update the velocity at the vertex using the below formula, where <img src="./images/epsilon.png" width="15px"/> represents the friction magnitude coefficient.
+							We now take the collision-corrected vertex positions and apply friction forces based on the surface used. This enables us to control the amount slipping between the water droplet and solid surface.
+						</p>
+
+						<p>
+							We update the velocity at the vertex using the below formula, where <img src="./images/epsilon.png" width="15px"/> represents the friction magnitude coefficient.
 						</p>
 
 						<div align="middle" style="padding-bottom: 1em;">
@@ -179,6 +183,48 @@
 
 				</div>
 
+			<a class="anchor" id="mean-curvature-flow"></a>
+			<h3 style="text-align: left;">Operator 2: Mean Curvature Flow</h3>
+
+			<a class="anchor" id="contact-angle-operator"></a>
+			<h3 style="text-align: left;">Operator 3: Contact Angle Operator</h3>
+
+				<p>
+					Now that the mean curvature flow operator allows us to create surface-tension like effects between the water and air, the next step is to produce these surface tension effects between the water drop and the surface it is in contact with. When a water drop flows onto a solid surface, its contact line will be affected by the hydrophobicity of the solid material which leads the water drop to have different shapes with regards to the hydrophobicity of the solid surface. This hydrophobicity is characterized by the stable contact angle, which is defined as the angle between the water/air surface and the solid surface when a water drop reaches equilibrium (Zhang et al, 2012).
+				</p>
+
+				<p>
+					Our contact angle operator exposes this property by explicitly finding the current contact angle between vertices in the water drop mesh and the surface it is in contact with then apply a boundary force on each contact vertex to further guide the motion of the water drop. To do so, we first identified all vertices that have collided with the solid surface of the scene and have non-collided neighboring vertices - we will refer to these vertices as contact vertices. We then explicitly calculate the contact angle of each contact vertex in order to apply a boundary force which will then affect its motion for future time steps.
+				</p>
+
+				<p>
+					To calculate the contact angle, we find the water-air surface normal <img src="./images/water_air_normal.png" width="25px"/> at a contact vertex O by the area-weighted average of triangle normals of its three neighboring vertices A, B and C that are between water and air (i.e. non-contact vertices). We then approximate the contact angle to be the angle between <img src="./images/water_air_normal.png" width="25px"/> and the surface normal, <img src="./images/surface_normal.png" width="22px"/>. Figure 2 shows a visual representation of this.
+				</p>
+
+				<div align="middle" style="padding-bottom: 1em;">
+					<img src="./images/contact_line_diagram.png" width="400px"/>
+					<figcaption align="middle">Figure 2: Contact line (shown in red) and relevant faces/normals to contact vertex O.</figcaption>
+				</div>
+
+				<p>
+					Using this calculated contact angle, we then apply a boundary force given by the following formula:
+				</p>
+
+				<div align="middle" style="padding-bottom: 1em;">
+					<img src="./images/contact_angle_force_bound.png" width="400px"/>
+				</div>
+
+				<p>
+					Here, <img src="./images/receding_angle.png" width="20px"> and <img src="./images/advancing_angle.png" width="20px"> are predefined receding and advancing contact angles, <img src="./images/alpha.png" width="18px"> is the magnitude coefficient for the boundary force, and <img src="./images/normal_projection.png" width="25px"> is the projection of <img src="./images/water_air_normal.png" width="25px"> onto the surface. This boundary force influences the contact vertices to aim to minimize the boundary force magnitude by stabilizing on the surface and reach an equilibrium position.
+				</p>
+
+			<a class="anchor" id="volume-correction"></a>
+			<h3 style="text-align: left;">Operator 4: Volume Correction</h3>
+
+				<p>
+					Volume Correction aims to reduce artifacts caused by volume changes from previous operators. We implemented global volume correction by moving vertex positions in the direction of their normals to oppose changes in volume. The update is <img src="./images/volume_correction_eqn.png" height="32px"/>; where <img src="./images/d_eqn.png" height="18px"/>, <img src="./images/x_old.png" height="25px"/> is the position of the vertex after operator 3 is applied, <img src="./images/change_in_volume.png" width="30px"/> is the change in volume, and <img src="./images/area.png" width="15px"/> is the total surface area. For example, when the volume to area ratio decreases as the droplet hits the surface, then all vertices move in the direction of their normals (outwards) to offset volume loss.
+				</p>
+
 		<!-- Problems -->
 		<a class="anchor" id="problems"></a>
 		<h2>Problems</h2>
@@ -186,6 +232,14 @@
 		<!-- Lessons Learned -->
 		<a class="anchor" id="lessons-learned"></a>
 		<h2>Lessons Learned</h2>
+
+			<p>
+				<ul>
+					<li>Blender has a pretty big learning curve.
+					<li>Units matter with regards to how we set our parameters.
+					<li>How to render realistic water-drops! (:
+				</ul>
+			</p>
 
 		<!-- Results -->
 		<a class="anchor" id="results"></a>
