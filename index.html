@@ -73,8 +73,8 @@
 	          </ul>
 	        </li>
 					<li><a href="#results">Results</a></li>
-					<li><a href="#references">References</a></li>
 					<li><a href="#contributions">Team Contributions</a></li>
+					<li><a href="#references">References</a></li>
       </ul>
 	    </div><!-- /.navbar-collapse -->
 	  </div><!-- /.container-fluid -->
@@ -229,6 +229,27 @@
 		<a class="anchor" id="problems"></a>
 		<h2>Problems</h2>
 
+			<p>
+				Our main challenge was learning to work with Blender and its Python API, since none of our team members were familiar with the platform, and we did not have any starter code. We relied on the Blender documentation and Stack Overflow to resolve many issues.
+			</p>
+
+			<p>
+				One of the biggest challenges we ran into was performing mean curvature flow on the droplet mesh. The reference paper by Zhang et al assumes a triangle mesh is used; however, after many days of debugging, we realized that object meshes in Blender default to using quad (square) faces. This led to our implementation yielding an inaccurate result.
+			</p>
+
+			<p>
+				We also faced many artifacts in our meshes, but after extensive debugging, we realized that changing parameters such as mass and <img src="./images/dt.png" width="22px"/> had enormous effects on the results of our renders. The paper that we followed often times did not specify their parameter settings, so it was important for us to try a wide range and combination of values.
+			</p>
+
+			<div align="middle" style="padding-bottom: 1em;">
+				<img src="./images/sample_bugs.png" width="480px"/>
+				<figcaption align="middle"/>Examples of errors we ran into during this project.</figcaption>
+			</div>
+
+			<p>
+				In addition, we had a significant pivot in our project; we originally planned on doing rain rendering, but we realized that the existing papers on rain rendering did not have very the best results. We then brainstormed and chose to pivot to small-scale water phenomena like droplet movement, which required essentially doing a project proposal and research all over again.
+			</p>
+
 		<!-- Lessons Learned -->
 		<a class="anchor" id="lessons-learned"></a>
 		<h2>Lessons Learned</h2>
@@ -237,6 +258,8 @@
 				<ul>
 					<li>Blender has a pretty big learning curve.
 					<li>Units matter with regards to how we set our parameters.
+					<li>It’s very easy to create artifacts when manipulating meshes; small errors will quickly accumulate.
+					<li>Relying heavily on one paper for implementation strategies can be limiting, especially when the paper leaves out important details.
 					<li>How to render realistic water-drops! (:
 				</ul>
 			</p>
@@ -244,15 +267,6 @@
 		<!-- Results -->
 		<a class="anchor" id="results"></a>
 		<h2>Results</h2>
-
-		<!-- References -->
-		<a class="anchor" id="references"></a>
-		<h2>References</h2>
-
-			<a class="anchor" id="ref-1"></a>
-			<p>
-				[1] Zhang, Yizhong, et al. “A Deformable Surface Model for Real-Time Water Drop Animation.” <i>IEEE Transactions on Visualization and Computer Graphics</i>, vol. 18, no. 8, 2012, pp. 1281–1289., doi:10.1109/tvcg.2011.141.
-			</p>
 
 		<!-- Team Contributions -->
 		<a class="anchor" id="contributions"></a>
@@ -271,6 +285,15 @@
 
 			<p>
 				<b>Varsha:</b> Worked primarily on external forces and mean curvature flow. Also helped implement boundary forces for the contact angle operator, and set up keyframe animations in Blender.
+			</p>
+
+		<!-- References -->
+		<a class="anchor" id="references"></a>
+		<h2>References</h2>
+
+			<a class="anchor" id="ref-1"></a>
+			<p>
+				[1] Zhang, Yizhong, et al. “A Deformable Surface Model for Real-Time Water Drop Animation.” <i>IEEE Transactions on Visualization and Computer Graphics</i>, vol. 18, no. 8, 2012, pp. 1281–1289., doi:10.1109/tvcg.2011.141.
 			</p>
 
 	</div>
