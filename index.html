@@ -183,8 +183,16 @@
 
 				</div>
 
+				<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
+					<iframe width="560" height="315" src="https://youtube.com/embed/jBplhUwRxmQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+				</div>
+
 			<a class="anchor" id="mean-curvature-flow"></a>
 			<h3 style="text-align: left;">Operator 2: Mean Curvature Flow</h3>
+
+			<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
+				<iframe width="560" height="315" src="https://youtube.com/embed/ahd2Df32Ba4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+			</div>
 
 			<a class="anchor" id="contact-angle-operator"></a>
 			<h3 style="text-align: left;">Operator 3: Contact Angle Operator</h3>
@@ -222,6 +230,9 @@
 					Once we have the boundary force, we check the current force applied to the vertex against the <img src="./images/f_bound.png" height="23px"/>. If the current force exceeds <img src="./images/f_bound.png" height="23px"/>, we calculate the bounding velocity using Newton’s second law of motion, <img src="./images/newton_law2.png" height="22px"/>, and the fact that <img src="./images/velocity_def.png" height="22px"/>. We then use Forward Euler with the bounding velocity to update the vertex position, and set the new velocity to be the bounding velocity.
 				</p>
 
+				<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
+					<iframe width="560" height="315" src="https://youtube.com/embed/fydAeE6UgOw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+				</div>
 
 			<a class="anchor" id="volume-correction"></a>
 			<h3 style="text-align: left;">Operator 4: Volume Correction</h3>
@@ -229,6 +240,7 @@
 				<p>
 					Volume Correction aims to reduce artifacts caused by volume changes from previous operators. We implemented global volume correction by moving vertex positions in the direction of their normals to oppose changes in volume. The update is <img src="./images/volume_correction_eqn.png" height="32px"/>; where <img src="./images/d_eqn.png" height="18px"/>, <img src="./images/x_old.png" height="25px"/> is the position of the vertex after operator 3 is applied, <img src="./images/change_in_volume.png" width="30px"/> is the change in volume, and <img src="./images/area.png" width="15px"/> is the total surface area. For example, when the volume to area ratio decreases as the droplet hits the surface, then all vertices move in the direction of their normals (outwards) to offset volume loss.
 				</p>
+
 
 		<!-- Problems -->
 		<a class="anchor" id="problems"></a>
@@ -291,10 +303,16 @@
 		  </div>
 		</div>
 
-		<h3 style="text-align: center;">Final rendering of water droplet falling on the solid surface with contact angle of 90.</h3>
+		<h3 style="text-align: center;">Final Rendering of Water Droplet Falling on the Solid Surface With Contact Angle of 90.</h3>
 
 		<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
 			<iframe width="560" height="315" src="https://www.youtube.com/embed/cEvWzJXYpOU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+		</div>
+
+		<h3 style="text-align: center;">Two Water Droplets Falling on a Solid Surface</h3>
+
+		<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
+			<iframe width="560" height="315" src="https://youtube.com/embed/GL5-WCPEnZY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 		</div>
 
 		<!-- References -->
