@@ -156,6 +156,12 @@ ol {
   padding: 5px;
 }
 
+.column2 {
+  float: left;
+  width: 50%;
+  padding: 5px;
+}
+
 /* Clear floats after image containers */
 .row::after {
   content: "";
