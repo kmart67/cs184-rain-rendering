@@ -4,70 +4,296 @@
 
 	<title>Water-Drop Simulation</title>
 
+
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css" integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+
 	<link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,500" rel="stylesheet">
 	<link rel="stylesheet" href="css/main.css">
-	</head>
-	<body>
-	<div>
-			<h1>CS 184: Computer Graphics and Imaging, Spring 2019<br>
-			<span class="sp-1">Real-time Water-Drop Simulation</span></h1>
+</head>
+
+<body>
+	<!-- Navbar -->
+	<nav class="navbar navbar-default navbar-fixed-top">
+	  <div class="container-fluid">
+	    <!-- Brand and toggle get grouped for better mobile display -->
+	    <div class="navbar-header">
+	      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+	        <span class="sr-only">Toggle navigation</span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	      </button>
+	      <a class="navbar-brand" href="#">CS 184: Realistic Water Droplet Simulation</a>
+	    </div>
+
+	    <!-- Collect the nav links, forms, and other content for toggling -->
+	    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="#abstract">Abstract</a></li>
+	        <li class="dropdown">
+	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Approach <span class="caret"></span></a>
+	          <ul class="dropdown-menu">
+							<li id="technical-dropdown"><a href="#technical-approach">Technical Approach</a></li>
+								<li class="deform-op">
+									<a href="#external-forces" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										External Forces
+									</a>
+								</li>
+								<li class="deform-op">
+									<a href="#mean-curvature-flow" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										Mean Curvature Flow
+									</a>
+								</li>
+								<li class="deform-op">
+									<a href="#contact-angle-operator" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										Contact Angle Operator
+									</a>
+								</li>
+								<li class="deform-op">
+									<a href="#volume-correction" style="padding-left:2em;">
+										<span class="glyphicon glyphicon-menu-right" style="font-size: 0.9em;"></span>
+										Volume Correction
+									</a>
+								</li>
+	            <li role="separator" class="divider"></li>
+	            <li><a href="#problems">Problems</a></li>
+	            <li role="separator" class="divider"></li>
+	            <li><a href="#lessons-learned">Lessons Learned</a></li>
+	          </ul>
+	        </li>
+					<li><a href="#results">Results</a></li>
+					<li><a href="#references">References</a></li>
+					<li><a href="#contributions">Team Contributions</a></li>
+      </ul>
+	    </div><!-- /.navbar-collapse -->
+	  </div><!-- /.container-fluid -->
+	</nav>
+
+	<div class="container">
+
+		<!-- Header -->
+		<h1>CS 184: Computer Graphics and Imaging, Spring 2019<br>
+			<span class="sp-1">Realistic Water Droplet Simulation</span></h1>
 			<h3>By Varsha Venkat, Jessica Yeh, and Karina Martinez</h3>
 
-				<h2>Milestone Status</h2>
-				<p>After receiving the feedback from our original <a href="proposal.html">project proposal</a>, our
-          team has pivoted from our original project idea to simulating real-time
-          water-drop animations in order to ensure we have a more tangible final
-          project that nails down our ultimate goals of this project. By the final
-          deliverable, we hope to implement:</p>
-          <ol>
-            <li>Deformation operators that will evolve the water droplets over
-              time based on surface tension and varying hydrophilic and hydrophobic
-              behavior effects based on solid surface materials and contact angles.</li>
-            <li>Mesh operators that will ultimately determine how water droplets interact
-              with each other by performing mesh splitting and collisions for specific scenes we are rendering.</li>
-          </ol>
-        <p>
-          <br>
-          After defining all these operators, we will then be able to apply them over
-          various scenes to demonstrate water-droplet and surface interactions.
-          <br><br>
-          In the following days, we then moved on to researching what rendering pipeline
-          will be the most efficient for our project - ultimately deciding on using
-          the Blender Python API to write scripts that will define our final water-droplet
-          animation behaviors. We all then split up tasks to complete varying parts
-          of our project, where Jessica worked on implementing a deformation operator
-          based on external forces and applying mesh operations that allow the
-          individual vertices in the water droplet to move, Varsha worked on
-          gravity-like effects on water droplets to animate falling water droplets
-          as well as collisions of water-drop vertices against planes, and Karina
-          worked on creating script that initializes the Cornell box scene we will
-          be using in our final deliverable when implementing water-surface interactions
-          as well as creating the water material on Blender for our water droplets.
-          <br><br>
-          The following video shows the progress we have made so far with our real-time
-					water-drop animation:
-				</p>
+		<!-- Abstract -->
+		<a class="anchor" id="abstract"></a>
+		<h2>Abstract</h2>
 
-					<div align="middle">
-						<iframe width="560" height="315" src="https://www.youtube.com/embed/iSIFFzVfnqQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-					</div>
+			<p>
+				In our project, we simulated small-scale water phenomena like falling water droplets using the Lagrangian deformable surface model defined in <i>A Deformable Surface Model for Real-Time Water Drop Animation</i> by Zhang et al <a href="#ref-1">[1]</a>. Our mesh representation is more memory and runtime-efficient than traditional water droplet simulations, which rely on a volumetric approach to modeling motion. We used the Blender Python API to model droplet mesh changes over time, in particular vertex movement and intersection with solids.
+
+			</p>
+
+		<!-- Technical Approach -->
+		<a class="anchor" id="technical-approach"></a>
+		<h2>Technical Approach</h2>
+
+			<a class="anchor" id="external-forces"></a>
+			<h3 style="text-align: left;">Operator 1: External Forces</h3>
 
 				<p>
-					You can also view the slides <a href="https://docs.google.com/presentation/d/1zPWnIbK43R0BBk8iFuALw9IbOIYhWIj8S0sI_IUiUJY/edit?usp=sharing">here</a>.
-					<br><br>
-          Based on our progress so far, we have reframed our weekly schedule to ensure
-          that we will be able to complete our goals by the final due date:</p>
-          <ol>
-            <li>Week of April 29: complete Milestone Deliverable and continue working
-              on deformation operators (external forces, mean curvature flow, contact
-              angle, and volume correction)</li>
-            <li>Week of May 6: complete mesh operators (mesh splitting and collisions),
-              generate multiple scenes that demonstrate varying interactions between water
-              droplets and surfaces, and complete our project poster for presentations on May 10th.</li>
-            <li>Week of May 13: debug our scripts to ensure our model is working as expected, complete final deliverables.</li>
-          </ol>
+					The first deformation operator involves applying external forces to each water droplet. External forces are used to perform preliminary vertex positions for each vertex in the droplet mesh. To simplify our model, we only consider the force of gravity, friction, and viscosity (through a damping force) for this part.
 				</p>
-				<br><br><br><br>
+
+				<p>
+					The external forces operator can be broken into four steps: applying gravitational force, handling surface collisions, applying friction, and applying a damping force. The operator is iteratively applied to each vertex in the droplet mesh.
+				</p>
+
+				<div class="container">
+
+					<h4>Step 1: Gravity</h4>
+
+						<p>
+							We represent gravity as a global constant (vector) in our code, and use this vector in conjunction with our timestep to update each vertex’s velocity and position vectors.
+						</p>
+
+						<p>
+							We assume that the vertex under operation has a current velocity of <img src="./images/v_old.png" height="25px">. If this is the first frame in the animation, <img src="./images/v_old.png" height="25px"> defaults to the zero vector; otherwise, we understand it to be the velocity after applying all deformation operators in the previous timestep. The updated velocity at the vertex, after applying acceleration due to gravity, is then <img src="./images/gravity_vel_update.png" height="25px"/>. Note that all our renders use <img src="./images/dt.png" width="22px"/> = 0.01 and <img src="./images/gravity.png" width="10px"/> is a vector with z-coordinate equal to -9.8 (representing that acceleration due to gravity is -9.8 m/s<sup>2</sup>).
+						</p>
+
+						<p>
+							Given that the initial vertex position is denoted by <img src="./images/x_old.png" height="25px"/>, we also update the vertex position to account for the force due to gravity using the Forward Euler method. The new position is given by <img src="./images/gravity_forward_euler.png" height="30px"/>, where <img src="./images/v_new.png" height="23px"> is defined as above.
+						</p>
+
+					<h4>Step 2: Surface Collisions</h4>
+
+						<p>
+							Once we have applied the force due to gravity, we handle vertex collisions with the surface. We do not want the droplet to fall below the surface of the collision object, so we project the new vertex position to the closest point on the object’s surface. We then update the velocity at the vertex accordingly, via an inelastic update.
+						</p>
+
+						<p>
+							We check for vertex-surface collisions as we did in Project 4, by checking whether the old vertex position and new vertex position lie on opposite sides of the surface. If a collision occurs, we calculate the distance from the new vertex position (after the gravity update in step 1) to the closest surface point and shift the new vertex position by that distance, along the surface normal. Assuming that <img src="./images/d.png" height="20px"/> represents the absolute distance from the new vertex position to the surface, the corrected vertex position is given by <img src="./images/collision_pos_update.png" height="24px"/> where <img src="./images/x_old.png" height="25px"/> is the position after the update in step 1 and <img src="./images/dir_surface.png" width="22px"/> is the direction vector to the closest surface point.
+						</p>
+
+						<p>
+							We also want to adjust the velocity to account for the adjusted position. This is done in an inelastic fashion, using the following equation:
+						</p>
+
+						<div align="middle" style="padding-bottom: 1em;">
+							<img src="./images/collision_vel_update.png" width="300px"/>
+						</div>
+
+						<p>
+							Here, <img src="./images/v_old.png" height="25px"> is the original velocity prior to the gravity update in step 1 and <img src="./images/surface_normal.png" width="20px"/> is the surface normal at the corrected position of the vertex. <img src="./images/surface_velocity.png" height="24px"/> is the surface velocity at the corrected vertex position, and is given by <img src="./images/surface_velocity_eqn.png" height="30px"/>.
+						</p>
+
+					<h4>Step 3: Friction</h4>
+
+						<p>
+							We now take the collision-corrected vertex positions and apply friction forces based on the surface used. This enables us to control the amount slipping between the water droplet and solid surface.
+						</p>
+
+						<p>
+							We update the velocity at the vertex using the below formula, where <img src="./images/epsilon.png" width="15px"/> represents the friction magnitude coefficient.
+						</p>
+
+						<div align="middle" style="padding-bottom: 1em;">
+							<img src="./images/friction_velocity_eqn.png" width="400px"/>
+						</div>
+
+						<p>
+							We can then update the vertex position using <img src="./images/friction_position_update.png" height="25px"/>, where <img src="./images/x_old.png" height="25px"/> is the vertex position and <img src="./images/v_old.png" height="25px"/> is the velocity at the vertex after the updates in step 2.
+						</p>
+
+					<h4>Step 4: Damping Force</h4>
+
+						<p>
+							The paper by Zhang et al also suggested using an additional method to model fluid viscosity; this is done by using a damping force to update the velocity at the vertex as follows:
+						</p>
+
+						<div align="middle" style="padding-bottom: 1em;">
+							<img src="./images/damping_force_eqn.png" width="315px"/>
+						</div>
+
+						<p>
+							We use <img src="./images/mu.png" height="15px"/> = 0.4 and <img src="./images/nu.png" height="15px"/> = 0.1 for our renders. <img src="./images/mu.png" height="15px"/> controls the reduction to the magnitude of velocity at each timestep, and <img src="./images/nu.png" height="15px"/> represents the viscosity coefficient. Recall that <img src="./images/v_old.png" height="25px"> is the velocity after the updates in step 4.
+						</p>
+
+				</div>
+
+			<a class="anchor" id="mean-curvature-flow"></a>
+			<h3 style="text-align: left;">Operator 2: Mean Curvature Flow</h3>
+
+			<a class="anchor" id="contact-angle-operator"></a>
+			<h3 style="text-align: left;">Operator 3: Contact Angle Operator</h3>
+
+				<p>
+					Now that the mean curvature flow operator allows us to create surface-tension like effects between the water and air, the next step is to produce these surface tension effects between the water drop and the surface it is in contact with. When a water drop flows onto a solid surface, its contact line will be affected by the hydrophobicity of the solid material which leads the water drop to have different shapes with regards to the hydrophobicity of the solid surface. This hydrophobicity is characterized by the stable contact angle, which is defined as the angle between the water/air surface and the solid surface when a water drop reaches equilibrium (Zhang et al, 2012).
+				</p>
+
+				<p>
+					Our contact angle operator exposes this property by explicitly finding the current contact angle between vertices in the water drop mesh and the surface it is in contact with then apply a boundary force on each contact vertex to further guide the motion of the water drop. To do so, we first identified all vertices that have collided with the solid surface of the scene and have non-collided neighboring vertices - we will refer to these vertices as contact vertices. We then explicitly calculate the contact angle of each contact vertex in order to apply a boundary force which will then affect its motion for future time steps.
+				</p>
+
+				<p>
+					To calculate the contact angle, we find the water-air surface normal <img src="./images/water_air_normal.png" width="25px"/> at a contact vertex O by the area-weighted average of triangle normals of its three neighboring vertices A, B and C that are between water and air (i.e. non-contact vertices). We then approximate the contact angle to be the angle between <img src="./images/water_air_normal.png" width="25px"/> and the surface normal, <img src="./images/surface_normal.png" width="22px"/>. Figure 2 shows a visual representation of this.
+				</p>
+
+				<div align="middle" style="padding-bottom: 1em;">
+					<img src="./images/contact_line_diagram.png" width="400px"/>
+					<figcaption align="middle">Figure 2: Contact line (shown in red) and relevant faces/normals to contact vertex O.</figcaption>
+				</div>
+
+				<p>
+					Using this calculated contact angle, we then apply a boundary force given by the following formula:
+				</p>
+
+				<div align="middle" style="padding-bottom: 1em;">
+					<img src="./images/contact_angle_force_bound.png" width="400px"/>
+				</div>
+
+				<p>
+					Here, <img src="./images/receding_angle.png" width="20px"> and <img src="./images/advancing_angle.png" width="20px"> are predefined receding and advancing contact angles, <img src="./images/alpha.png" width="18px"> is the magnitude coefficient for the boundary force, and <img src="./images/normal_projection.png" width="25px"> is the projection of <img src="./images/water_air_normal.png" width="25px"> onto the surface. This boundary force influences the contact vertices to aim to minimize the boundary force magnitude by stabilizing on the surface and reach an equilibrium position.
+				</p>
+
+			<a class="anchor" id="volume-correction"></a>
+			<h3 style="text-align: left;">Operator 4: Volume Correction</h3>
+
+				<p>
+					Volume Correction aims to reduce artifacts caused by volume changes from previous operators. We implemented global volume correction by moving vertex positions in the direction of their normals to oppose changes in volume. The update is <img src="./images/volume_correction_eqn.png" height="32px"/>; where <img src="./images/d_eqn.png" height="18px"/>, <img src="./images/x_old.png" height="25px"/> is the position of the vertex after operator 3 is applied, <img src="./images/change_in_volume.png" width="30px"/> is the change in volume, and <img src="./images/area.png" width="15px"/> is the total surface area. For example, when the volume to area ratio decreases as the droplet hits the surface, then all vertices move in the direction of their normals (outwards) to offset volume loss.
+				</p>
+
+		<!-- Problems -->
+		<a class="anchor" id="problems"></a>
+		<h2>Problems</h2>
+
+			<p>
+				Our main challenge was learning to work with Blender and its Python API, since none of our team members were familiar with the platform, and we did not have any starter code. We relied on the Blender documentation and Stack Overflow to resolve many issues.
+			</p>
+
+			<p>
+				One of the biggest challenges we ran into was performing mean curvature flow on the droplet mesh. The reference paper by Zhang et al assumes a triangle mesh is used; however, after many days of debugging, we realized that object meshes in Blender default to using quad (square) faces. This led to our implementation yielding an inaccurate result.
+			</p>
+
+			<p>
+				We also faced many artifacts in our meshes, but after extensive debugging, we realized that changing parameters such as mass and <img src="./images/dt.png" width="22px"/> had enormous effects on the results of our renders. The paper that we followed often times did not specify their parameter settings, so it was important for us to try a wide range and combination of values.
+			</p>
+
+			<div align="middle" style="padding-bottom: 1em;">
+				<img src="./images/sample_bugs.png" width="480px"/>
+				<figcaption align="middle"/>Examples of errors we ran into during this project.</figcaption>
+			</div>
+
+			<p>
+				In addition, we had a significant pivot in our project; we originally planned on doing rain rendering, but we realized that the existing papers on rain rendering did not have very the best results. We then brainstormed and chose to pivot to small-scale water phenomena like droplet movement, which required essentially doing a project proposal and research all over again.
+			</p>
+
+		<!-- Lessons Learned -->
+		<a class="anchor" id="lessons-learned"></a>
+		<h2>Lessons Learned</h2>
+
+			<p>
+				<ul>
+					<li>Blender has a pretty big learning curve.
+					<li>Units matter with regards to how we set our parameters.
+					<li>It’s very easy to create artifacts when manipulating meshes; small errors will quickly accumulate.
+					<li>Relying heavily on one paper for implementation strategies can be limiting, especially when the paper leaves out important details.
+					<li>How to render realistic water-drops! (:
+				</ul>
+			</p>
+
+		<!-- Results -->
+		<a class="anchor" id="results"></a>
+		<h2>Results</h2>
+
+		<!-- References -->
+		<a class="anchor" id="references"></a>
+		<h2>References</h2>
+
+			<a class="anchor" id="ref-1"></a>
+			<p>
+				[1] Zhang, Yizhong, et al. “A Deformable Surface Model for Real-Time Water Drop Animation.” <i>IEEE Transactions on Visualization and Computer Graphics</i>, vol. 18, no. 8, 2012, pp. 1281–1289., doi:10.1109/tvcg.2011.141.
+			</p>
+
+		<!-- Team Contributions -->
+		<a class="anchor" id="contributions"></a>
+		<h2>Team Contributions</h2>
+			<p>
+				The work was evenly distributed across our team. There was a lot of cross-collaboration, especially when it came to debugging errors in each part. Our detailed contributions to this project are outlined below:
+			</p>
+
+			<p>
+				<b>Jessica:</b> Worked primarily on volume corrections and mesh optimizations, including collapsed edges (however, this did not make it into our final code) . Also worked on keyframe animations, using shape keys, external forces (gravity update), and environment rendering.
+			</p>
+
+			<p>
+				<b>Karina:</b> Worked primarily on the contact angle operator, and scene/environment rendering (including materials research). Also implemented Cholesky linear factorization for solving positive semidefinite system in mean curvature flow.
+			</p>
+
+			<p>
+				<b>Varsha:</b> Worked primarily on external forces and mean curvature flow. Also helped implement boundary forces for the contact angle operator, and set up keyframe animations in Blender.
+			</p>
+
 	</div>
-	</body>
-</html>
