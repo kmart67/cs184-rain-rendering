@@ -194,43 +194,44 @@
 
 				<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
 					<iframe width="560" height="315" src="https://youtube.com/embed/jBplhUwRxmQ" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+					<figcaption align="middle">Animation with only external forces.</figcaption>
 				</div>
 
 			<a class="anchor" id="mean-curvature-flow"></a>
 			<h3 style="text-align: left;">Operator 2: Mean Curvature Flow</h3>
 
-			<p>
-				In addition to modeling the change in droplet's motion, we want to account for surface tension. This is important for creating a realistic droplet shape even on collision. To model surface tension, we use the mean curvature flow approach as suggested by Sussman et al <a href="#ref-2">[2]</a>.
-			</p>
+				<p>
+					In addition to modeling the change in droplet's motion, we want to account for surface tension. This is important for creating a realistic droplet shape even on collision. To model surface tension, we use the mean curvature flow approach as suggested by Sussman et al <a href="#ref-2">[2]</a>.
+				</p>
 
-			<p>
-				We work with discrete values over the triangle mesh for each droplet, so we use a semi-implicit method for mean curvature flow defined by Desbrun et al <a href="#ref-3">[3]</a>. The discrete function is shown below:
-			</p>
+				<p>
+					We work with discrete values over the triangle mesh for each droplet, so we use a semi-implicit method for mean curvature flow defined by Desbrun et al <a href="#ref-3">[3]</a>. The discrete function is shown below:
+				</p>
 
-			<div align="middle" style="padding-bottom: 1em;">
-				<img src="./images/semi_implicit_method.png" width="300px"/>
-			</div>
+				<div align="middle" style="padding-bottom: 1em;">
+					<img src="./images/semi_implicit_method.png" width="300px"/>
+				</div>
 
-			<p>
-				<img src="./images/identity.png" height="15px"/> is an identity matrix with side length equal to the number of vertices in the droplet mesh. <img src="./images/gamma.png" height="18px"/> is the coefficient of curvature flow. <img src="./images/lumped_mass_matrix.png" height="15px"/> is the lumped mass matrix, which represents the droplet's resistance to change in motion. <img src="./images/cotangent_matrix.png" height="15px"/> is a symmetric matrix of cotangent coefficients from the discrete Laplace-Beltrami operator. The cotangent coefficients for two connected vertices apply to the two angles opposite the connecting edge, as shown below in Figure 2.
-			</p>
+				<p>
+					<img src="./images/identity.png" height="15px"/> is an identity matrix with side length equal to the number of vertices in the droplet mesh. <img src="./images/gamma.png" height="18px"/> is the coefficient of curvature flow. <img src="./images/lumped_mass_matrix.png" height="15px"/> is the lumped mass matrix, which represents the droplet's resistance to change in motion. <img src="./images/cotangent_matrix.png" height="15px"/> is a symmetric matrix of cotangent coefficients from the discrete Laplace-Beltrami operator. The cotangent coefficients for two connected vertices apply to the two angles opposite the connecting edge, as shown below in Figure 2.
+				</p>
 
-			<div align="middle" style="padding-bottom: 1em;">
-				<img src="./images/cotangent_diagram.png" width="200px"/>
-				<figcaption align="middle">Figure 2: Diagram of connected vertices <img src="./images/x_i.png" height="18px"/> and <img src="./images/x_j.png" height="18px"/>, with their opposing angles <img src="./images/alpha_j.png" height="15px"/> and <img src="./images/beta_j.png" height="18px"/>.
-			</div>
+				<div align="middle" style="padding-bottom: 1em;">
+					<img src="./images/cotangent_diagram.png" width="200px"/>
+					<figcaption align="middle">Figure 2: Diagram of connected vertices <img src="./images/x_i.png" height="18px"/> and <img src="./images/x_j.png" height="18px"/>, with their opposing angles <img src="./images/alpha_j.png" height="15px"/> and <img src="./images/beta_j.png" height="18px"/>.
+				</div>
 
-			<p>
-				We specify the coefficients of <img src="./images/cotangent_matrix.png" height="15px"/> so that <img src="./images/l_ij.png" height="40px"/> and <img src="./images/l_ii.png" height="50px"/> for neighboring vertices i and j.
-			</p>
+				<p>
+					We specify the coefficients of <img src="./images/cotangent_matrix.png" height="15px"/> so that <img src="./images/l_ij.png" height="40px"/> and <img src="./images/l_ii.png" height="50px"/> for neighboring vertices i and j.
+				</p>
 
-			<p>
-				In order to solve the earlier matrix equation, we first transform the equation into a symmetric positive definite system by multiplying both sides by <img src="./images/lumped_mass_matrix.png" height="15px"/>. We then use Cholesky linear factorization to decompose the modified matrix multiplier (<img src="./images/multiplier.png" height="22px"/>) into a triangular matrix, <img src="./images/triangular_matrix.png" height="17px"/>. We then solved for the following linear equation: <img src="./images/cholesky_factorization.png" height="25px"/>. This step’s main purpose was to improve our numerical solutions of the updated vertex positions.
-			</p>
-
+				<p>
+					In order to solve the earlier matrix equation, we first transform the equation into a symmetric positive definite system by multiplying both sides by <img src="./images/lumped_mass_matrix.png" height="15px"/>. We then use Cholesky linear factorization to decompose the modified matrix multiplier (<img src="./images/multiplier.png" height="22px"/>) into a triangular matrix, <img src="./images/triangular_matrix.png" height="17px"/>. We then solved for the following linear equation: <img src="./images/cholesky_factorization.png" height="25px"/>. This step’s main purpose was to improve our numerical solutions of the updated vertex positions.
+				</p>
 
 				<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
 					<iframe width="560" height="315" src="https://youtube.com/embed/ahd2Df32Ba4" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+					<figcaption align="middle">Animation with external forces and mean curvature flow.<br>A smoother end state is visible.</figcaption>
 				</div>
 
 			<a class="anchor" id="contact-angle-operator"></a>
@@ -271,6 +272,7 @@
 
 				<div align="middle" style="padding-top: 1em; padding-bottom: 1em;">
 					<iframe width="560" height="315" src="https://youtube.com/embed/fydAeE6UgOw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+					<figcaption align="middle">Animation with external forces, mean curvature flow, and contact angle operator.<br>The droplet no longer collapses.</figcaption>
 				</div>
 
 			<a class="anchor" id="volume-correction"></a>
